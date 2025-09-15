@@ -20,10 +20,10 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
+            UserSeeder::class,
             MaterialSeeder::class,
             PenerimaanSeeder::class,
             PengeluaranSeeder::class,
-            UserSeeder::class,
         ]);
     }
 }

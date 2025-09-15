@@ -27,6 +27,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/material', [MaterialController::class, 'store'])->name('material.store');
     Route::put('/material/{id}', [MaterialController::class, 'update'])->name('material.update');
     Route::delete('/material/{id}', [MaterialController::class, 'destroy'])->name('material.destroy');
+
+    Route::post('/notifications/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+
 });
 
 Route::fallback(function () {

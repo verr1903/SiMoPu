@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengeluaran extends Model
 {
-    protected $fillable = ['material_id', 'tanggal_keluar', 'saldo_keluar', 'sumber', 'status'];
+    protected $fillable = ['material_id', 'user_id', 'tanggal_keluar', 'saldo_keluar', 'sumber', 'status'];
 
     /**
      * Scope untuk urutkan data:

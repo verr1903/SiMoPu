@@ -25,6 +25,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Simpan username di session
+            $request->session()->put('id', Auth::user()->id);
             $request->session()->put('username', Auth::user()->username);
             $request->session()->put('level_user', Auth::user()->level_user);
 
