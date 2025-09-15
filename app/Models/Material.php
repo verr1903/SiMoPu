@@ -9,6 +9,7 @@ class Material extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'plant',
         'kode_material',
         'uraian_material',
         'satuan',

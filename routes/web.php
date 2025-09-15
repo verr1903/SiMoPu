@@ -16,6 +16,9 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
+    Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
+    
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
     Route::post('pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
     Route::patch('/pengeluaran/{id}/status', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus');
@@ -29,7 +32,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/material/{id}', [MaterialController::class, 'destroy'])->name('material.destroy');
 
     Route::post('/notifications/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-
 });
 
 Route::fallback(function () {

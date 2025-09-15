@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('material_id')->constrained('materials')->onDelete('cascade'); // material terkait
             $table->date('tanggal_keluar');
             $table->integer('saldo_keluar');
+            $table->integer('saldo_sisa');
             $table->string('sumber');
             $table->string('status')->default('menunggu');
             $table->timestamps();

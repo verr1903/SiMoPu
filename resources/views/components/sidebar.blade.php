@@ -19,10 +19,10 @@
                     </a>
                 </div>
 
-                
+
                 <!-- Notifikasi -->
                 @auth
-                @if(in_array(Auth::user()->level_user, ['admin', 'afdeling']))
+                @if(Str::contains(Auth::user()->level_user, ['afdeling', 'administrasi']))
                 @php
                 $notifications = \App\Models\Notification::where('user_id', auth()->id())
                 ->where('status', 'unread')
@@ -125,6 +125,18 @@
                         <span>Pengeluaran</span>
                     </a>
                 </li>
+
+                @auth
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi']))
+                <!-- Realisasi Pengeluaran -->
+                <li class="sidebar-item {{ request()->routeIs('realisasiPengeluaran') ? 'active' : '' }}">
+                    <a href="{{ route('realisasiPengeluaran') }}" class="sidebar-link">
+                        <i class="bi bi-clipboard-check"></i>
+                        <span>Realisasi Pengeluaran</span>
+                    </a>
+                </li>
+                @endif
+                @endauth
 
             </ul>
         </div>

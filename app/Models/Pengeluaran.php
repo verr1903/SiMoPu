@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengeluaran extends Model
 {
-    protected $fillable = ['material_id', 'user_id', 'tanggal_keluar', 'saldo_keluar', 'sumber', 'status'];
+
+    protected $fillable = ['material_id', 'user_id', 'tanggal_keluar', 'saldo_keluar', 'saldo_sisa' , 'sumber', 'status'];
 
     /**
      * Scope untuk urutkan data:
@@ -37,5 +38,15 @@ class Pengeluaran extends Model
     public function material()
     {
         return $this->belongsTo(Material::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function realisasiPengeluarans()
+    {
+        return $this->hasMany(RealisasiPengeluaran::class, 'pengeluaran_id');
     }
 }

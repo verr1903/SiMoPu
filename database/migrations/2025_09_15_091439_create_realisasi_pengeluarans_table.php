@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('materials', function (Blueprint $table) {
+        Schema::create('realisasi_pengeluarans', function (Blueprint $table) {
             $table->id();
-            $table->string('plant');
-            $table->string('kode_material')->unique();
-            $table->string('uraian_material');
-            $table->string('satuan')->default('Kg');
-            $table->integer('total_saldo')->default(0);
+            $table->foreignId('pengeluaran_id')->constrained()->onDelete('cascade');
+            $table->integer('cicilan_pengeluaran');
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('materials');
+        Schema::dropIfExists('realisasi_pengeluarans');
     }
 };

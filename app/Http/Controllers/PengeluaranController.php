@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Pengeluaran;
 use App\Models\Material;
 use App\Models\Notification;
+use App\Models\RealisasiPengeluaran;
 
 class PengeluaranController extends Controller
 {
@@ -25,8 +26,23 @@ class PengeluaranController extends Controller
         }
 
         // 🔄 Urutkan: status "menunggu" paling atas, lalu by created_at desc
-        $query->orderByRaw("CASE WHEN status = 'menunggu' THEN 0 ELSE 1 END")
-            ->orderBy('created_at', 'asc');
+        $query->orderByRaw("
+            CASE 
+                WHEN status = 'menunggu' THEN 0
+                WHEN status = 'diterima' THEN 1
+                WHEN status = 'ditolak' THEN 2
+                ELSE 3
+            END
+        ");
+
+        $query->orderByRaw("
+            CASE 
+                WHEN status = 'menunggu' THEN UNIX_TIMESTAMP(created_at)
+                WHEN status = 'diterima' THEN -UNIX_TIMESTAMP(updated_at)
+                WHEN status = 'ditolak' THEN UNIX_TIMESTAMP(created_at)
+            END
+        ");
+
 
         // 🔄 Panggil scope yang kita buat
         $Pengeluarans = $query->urutkanStatus()
@@ -70,17 +86,18 @@ class PengeluaranController extends Controller
             'material_id'    => $request->material_id,
             'tanggal_keluar' => $request->tanggal_keluar,
             'saldo_keluar'   => $request->saldo_keluar,
+            'saldo_sisa'     => $request->saldo_keluar,
             'sumber'         => $request->sumber,
             'status'         => 'menunggu', // default menunggu
         ]);
 
         // Kirim notifikasi ke admin dan super admin
-        $admins = \App\Models\User::whereIn('level_user', ['admin', 'super admin'])->get();
+        $admins = \App\Models\User::whereIn('level_user', ['administrasi', 'administrator'])->get();
 
         foreach ($admins as $admin) {
             \App\Models\Notification::create([
                 'user_id' => $admin->id,
-                'message' => "Pengajuan pengeluaran kode {$material->kode_material} oleh {$user->username} menunggu persetujuan.",
+                'message' => "Pengajuan pengeluaran kode {$material->kode_material} oleh {$user->username} dari {$user->level_user} menunggu persetujuan.",
                 'status'  => 'unread',
             ]);
         }
@@ -109,7 +126,7 @@ class PengeluaranController extends Controller
                         Kode Material : {$pengeluaran->material->kode_material}, 
                         Tanggal Keluar: {$pengeluaran->tanggal_keluar}, 
                         Saldo Keluar  : {$pengeluaran->saldo_keluar}, 
-                        Sumber        : {$pengeluaran->sumber}
+                        Blok          : {$pengeluaran->sumber}
                         MSG;
 
             Notification::create([
@@ -129,6 +146,7 @@ class PengeluaranController extends Controller
 
             $pengeluaran->update([
                 'status' => 'diterima',
+                'qty_pengeluaran' => $request->input('pengeluaran_detail'), // array disimpan
             ]);
 
             $message = <<<MSG
@@ -136,7 +154,7 @@ class PengeluaranController extends Controller
                         Kode Material : {$pengeluaran->material->kode_material},
                         Tanggal Keluar: {$pengeluaran->tanggal_keluar},
                         Saldo Keluar  : {$pengeluaran->saldo_keluar},
-                        Sumber        : {$pengeluaran->sumber}
+                        Blok        : {$pengeluaran->sumber}
                         MSG;
 
             Notification::create([
@@ -148,5 +166,98 @@ class PengeluaranController extends Controller
         }
 
         return back()->with('error', 'Status tidak valid.');
+    }
+
+    // realisasi pengeluaran
+    public function indexRealisasi(Request $request)
+    {
+        // Query dasar
+        $query = RealisasiPengeluaran::with(['pengeluaran.material', 'pengeluaran.user']);
+
+        // ✅ Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($query) use ($search) {
+                // Cari di material
+                $query->whereHas('pengeluaran.material', function ($q) use ($search) {
+                    $q->where('kode_material', 'like', "%{$search}%");
+                })
+                    // Cari di user
+                    ->orWhereHas('pengeluaran.user', function ($q) use ($search) {
+                        $q->where('username', 'like', "%{$search}%")
+                            ->orWhere('level_user', 'like', "%{$search}%");
+                    })
+                    // Cari di pengeluaran
+                    ->orWhereHas('pengeluaran', function ($q) use ($search) {
+                        $q->where('sumber', 'like', "%{$search}%")
+                            ->orWhereDate('tanggal_keluar', 'like', "%{$search}%");
+                    })
+                    // Cari di tabel realisasi_pengeluaran sendiri
+                    ->orWhere('cicilan_pengeluaran', 'like', "%{$search}%")
+                    ->orWhereDate('created_at', 'like', "%{$search}%");
+            });
+        }
+
+
+        // ✅ Sorting
+        $sort  = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+
+        if (in_array($sort, ['created_at', 'tanggal_keluar', 'sumber'])) {
+            $query->orderBy($sort, $order);
+        } elseif ($sort === 'kode_material') {
+            $query->join('pengeluarans', 'realisasi_pengeluarans.pengeluaran_id', '=', 'pengeluarans.id')
+                ->join('materials', 'pengeluarans.material_id', '=', 'materials.id')
+                ->orderBy('materials.kode_material', $order)
+                ->select('realisasi_pengeluarans.*');
+        } elseif ($sort === 'qty') {
+            $query->orderBy('cicilan_pengeluaran', $order);
+        }
+
+        // ✅ Ambil data
+        $realisasiPengeluarans = $query->paginate(10)->appends($request->all());
+
+        // Pilihan pengeluaran (untuk tambah realisasi)
+        $pengeluarans = Pengeluaran::with(['material', 'user'])
+            ->where('status', 'diterima')
+            ->where('saldo_sisa', '>', 0)
+            ->get();
+
+        return view('admin.realisasiPengeluaran', [
+            'title'                 => 'Realisasi Pengeluaran',
+            'realisasiPengeluarans' => $realisasiPengeluarans,
+            'pengeluarans'          => $pengeluarans,
+        ]);
+    }
+
+
+
+    public function storeRealisasi(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'pengeluaran_id'      => 'required|exists:pengeluarans,id',
+            'cicilan_pengeluaran' => 'required|integer|min:1',
+        ]);
+
+        // Ambil pengeluaran terkait
+        $pengeluaran = Pengeluaran::findOrFail($request->pengeluaran_id);
+
+        // Cek jika cicilan melebihi saldo_sisa
+        if ($request->cicilan_pengeluaran > $pengeluaran->saldo_sisa) {
+            return back()->with('error', 'Cicilan melebihi saldo sisa!');
+        }
+
+        // Simpan ke tabel realisasi_pengeluarans
+        RealisasiPengeluaran::create([
+            'pengeluaran_id'      => $request->pengeluaran_id,
+            'cicilan_pengeluaran' => $request->cicilan_pengeluaran,
+        ]);
+
+        // Kurangi saldo_sisa pada tabel pengeluarans
+        $pengeluaran->decrement('saldo_sisa', $request->cicilan_pengeluaran);
+
+        return redirect()->route('realisasiPengeluaran')
+            ->with('success', 'Realisasi pengeluaran berhasil ditambahkan!');
     }
 }

@@ -41,44 +41,50 @@
                         <div class="card">
                             <div class="card-content">
                                 <!-- Button Tambah & Form Search -->
-                                <div class="d-flex justify-content-between align-items-center px-5 pt-3">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
                                     <!-- Form Search + Sorting -->
-                                    <form action="{{ route('materials') }}" method="GET" class="d-flex">
-                                        <input type="text" name="search" class="form-control me-2"
-                                            placeholder="Cari material..."
+                                    <form action="{{ route('materials') }}" method="GET"
+                                        class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
+                                        <input type="text" name="search" class="form-control"
+                                            placeholder="Cari pengeluaran..."
                                             value="{{ request('search') }}">
 
                                         <!-- Kolom Sort -->
-                                        <select name="sort" class="form-select me-2">
+                                        <select name="sort" class="form-select">
                                             <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
                                             <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
                                             <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
-                                            <option value="satuan" {{ request('sort') == 'satuan' ? 'selected' : '' }}>Satuan</option>
                                         </select>
 
                                         <!-- Order (Terkecil/Terbesar) -->
-                                        <select name="order" class="form-select me-2">
+                                        <select name="order" class="form-select">
                                             <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
                                             <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
                                         </select>
 
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-sort-alpha-down"></i> Urutkan
+                                        <button type="submit"
+                                            class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
+                                            style="height: 45px;">
+                                            <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
                                         </button>
 
                                         @if(request('search') || request('sort') || request('order'))
-                                        <a href="{{ route('materials') }}" class="btn btn-secondary ms-2">
-                                            <i class="bi bi-x"></i> Reset
+                                        <a href="{{ route('materials') }}"
+                                            class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
+                                            style="height: 45px;">
+                                            <i class="bi mb-2 bi-x"></i> Reset
                                         </a>
                                         @endif
                                     </form>
 
                                     <!-- Tombol Tambah (Kanan) -->
                                     @auth
-                                    @if(in_array(Auth::user()->level_user, ['admin', 'super admin']))
-                                    <button type="button" class="btn btn-success mt-1 p-3" data-bs-toggle="modal"
+                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                    <button type="button"
+                                        class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
+                                        style=" height: 45px;" data-bs-toggle="modal"
                                         data-bs-target="#tambah">
-                                        Tambah
+                                        <i class="bi bi-plus mb-2 me-1"></i>Tambah
                                     </button>
                                     @endif
                                     @endauth
@@ -88,7 +94,7 @@
                                 <!-- table hover -->
                                 <div class="table-responsive px-5 pt-4 pb-5">
                                     @auth
-                                    @if(in_array(Auth::user()->level_user, ['admin', 'super admin']))
+                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                     <table class="table table-hover mb-0 text-center">
                                         <thead>
                                             <tr>
@@ -122,6 +128,7 @@
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#editModal"
                                                             data-id="{{ $material->id }}"
+                                                            data-plant="{{ $material->plant }}"
                                                             data-kode="{{ $material->kode_material }}"
                                                             data-uraian="{{ $material->uraian_material }}"
                                                             data-satuan="{{ $material->satuan }}">
@@ -201,7 +208,7 @@
                                     @endauth
 
                                     @auth
-                                    @if(in_array(Auth::user()->level_user, ['afdeling']))
+                                    @if(Str::contains(Auth::user()->level_user, 'afdeling'))
                                     <table class="table table-hover mb-0 text-center">
                                         <thead>
                                             <tr>
@@ -305,9 +312,18 @@
                     <form action="{{ route('material.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
+                            <label for="plant" class="form-label">Kode Plant</label>
+                            <input type="text" class="form-control @error('plant') is-invalid @enderror"
+                                name="plant" id="plant" value="{{ old('plant') }}" placeholder="Contoh: 3E02" required>
+                            @error('plant')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="kode_material" class="form-label">Kode Material</label>
                             <input type="text" class="form-control @error('kode_material') is-invalid @enderror"
-                                name="kode_material" id="kode_material" value="{{ old('kode_material') }}" placeholder="Contoh: MTL-001" required>
+                                name="kode_material" id="kode_material" value="{{ old('kode_material') }}" placeholder="Contoh: 40005941" required>
                             @error('kode_material')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -316,23 +332,8 @@
                         <div class="mb-3">
                             <label for="uraian_material" class="form-label">Uraian Material</label>
                             <input type="text" class="form-control @error('uraian_material') is-invalid @enderror"
-                                name="uraian_material" id="uraian_material" value="{{ old('uraian_material') }}" placeholder="Contoh: Pupuk Urea" required>
+                                name="uraian_material" id="uraian_material" value="{{ old('uraian_material') }}" placeholder="Contoh: FERTILIZER:KCL (MOP);60% K2O;GRANUL" required>
                             @error('uraian_material')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="satuan" class="form-label">Satuan</label>
-                            <select class="form-select @error('satuan') is-invalid @enderror"
-                                name="satuan" id="satuan" required>
-                                <option value="">-- Pilih Satuan --</option>
-                                <option value="Sak" {{ old('satuan') == 'Sak' ? 'selected' : '' }}>Sak</option>
-                                <option value="Liter" {{ old('satuan') == 'Liter' ? 'selected' : '' }}>Liter</option>
-                                <option value="Kg" {{ old('satuan') == 'Kg' ? 'selected' : '' }}>Kg</option>
-                                <option value="Lembar" {{ old('satuan') == 'Lembar' ? 'selected' : '' }}>Lembar</option>
-                            </select>
-                            @error('satuan')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -373,6 +374,11 @@
                         <input type="hidden" id="edit_id" name="id">
 
                         <div class="mb-3">
+                            <label for="edit_plant" class="form-label">Kode plant</label>
+                            <input type="text" class="form-control" id="edit_plant" name="plant">
+                        </div>
+
+                        <div class="mb-3">
                             <label for="edit_kode_material" class="form-label">Kode Material</label>
                             <input type="text" class="form-control" id="edit_kode_material" name="kode_material">
                         </div>
@@ -382,15 +388,6 @@
                             <input type="text" class="form-control" id="edit_uraian_material" name="uraian_material">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="edit_satuan" class="form-label">Satuan</label>
-                            <select class="form-select" id="edit_satuan" name="satuan">
-                                <option value="Sak">Sak</option>
-                                <option value="Liter">Liter</option>
-                                <option value="Kg">Kg</option>
-                                <option value="Lembar">Lembar</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -450,12 +447,14 @@
                 // Ambil data dari atribut tombol
                 const id = this.getAttribute('data-id');
                 const kode = this.getAttribute('data-kode');
+                const plant = this.getAttribute('data-plant');
                 const uraian = this.getAttribute('data-uraian');
                 const satuan = this.getAttribute('data-satuan');
 
                 // Isi form di modal
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_kode_material').value = kode;
+                document.getElementById('edit_plant').value = plant;
                 document.getElementById('edit_uraian_material').value = uraian;
                 document.getElementById('edit_satuan').value = satuan;
 

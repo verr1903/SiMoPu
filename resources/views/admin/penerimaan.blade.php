@@ -58,13 +58,14 @@
                             <div class="card-content">
 
                                 <!-- 🔍 Search & Sort -->
-                                <div class="d-flex justify-content-between align-items-center px-5 pt-3">
-                                    <form action="{{ route('penerimaan') }}" method="GET" class="d-flex">
-                                        <input type="text" name="search" class="form-control me-2"
-                                            placeholder="Cari penerimaan..."
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                                    <form action="{{ route('penerimaan') }}" method="GET"
+                                        class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
+                                        <input type="text" name="search" class="form-control"
+                                            placeholder="Cari pengeluaran..."
                                             value="{{ request('search') }}">
 
-                                        <select name="sort" class="form-select me-2">
+                                        <select name="sort" class="form-select">
                                             <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
                                             <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
                                             <option value="tanggal_terima" {{ request('sort') == 'tanggal_terima' ? 'selected' : '' }}>Tanggal Terima</option>
@@ -72,27 +73,33 @@
                                             <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>Sumber</option>
                                         </select>
 
-                                        <select name="order" class="form-select me-2">
+                                        <select name="order" class="form-select">
                                             <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
                                             <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
                                         </select>
 
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-sort-alpha-down"></i> Urutkan
+                                        <button type="submit"
+                                            class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
+                                            style="height: 45px;">
+                                            <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
                                         </button>
 
                                         @if(request('search') || request('sort') || request('order'))
-                                        <a href="{{ route('penerimaan') }}" class="btn btn-secondary ms-2">
-                                            <i class="bi bi-x"></i> Reset
+                                        <a href="{{ route('penerimaan') }}"
+                                            class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
+                                            style="height: 45px;">
+                                            <i class="bi mb-2 bi-x"></i> Reset
                                         </a>
                                         @endif
                                     </form>
-                                    <!-- Tombol Tambah (Kanan) -->
+                                    <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
                                     @auth
-                                    @if(in_array(Auth::user()->level_user, ['admin', 'super admin']))
-                                    <button type="button" class="btn btn-success mt-1 p-3" data-bs-toggle="modal"
-                                        data-bs-target="#tambah">
-                                        Tambah
+                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                    <button type="button"
+                                        class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
+                                        style=" height: 45px;"
+                                        data-bs-toggle="modal" data-bs-target="#tambah">
+                                        <i class="bi bi-plus mb-2 me-1"></i>Tambah
                                     </button>
                                     @endif
                                     @endauth
@@ -181,7 +188,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="saldo_masuk" class="form-label">Jumlah Saldo Masuk</label>
+                            <label for="saldo_masuk" class="form-label">Jumlah Saldo Masuk /Kg</label>
                             <input type="number" min="1" class="form-control @error('saldo_masuk') is-invalid @enderror"
                                 name="saldo_masuk" id="saldo_masuk" value="{{ old('saldo_masuk') }}" placeholder="Contoh: 100" required>
                             @error('saldo_masuk')

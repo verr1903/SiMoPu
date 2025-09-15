@@ -38,21 +38,20 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi data
         $request->validate([
+            'plant'      => 'required|string|max:50',
             'kode_material'   => 'required|max:50|unique:materials,kode_material',
             'uraian_material' => 'required|string|max:255',
-            'satuan'          => 'required|string|max:50',
-            'total_saldo'     => 'required|string|max:50',
+            'total_saldo'     => 'nullable|string|max:50',
         ]);
 
-        // Simpan data ke DB
         Material::create([
+            'plant'      => $request->plant,
             'kode_material'   => $request->kode_material,
             'uraian_material' => $request->uraian_material,
-            'satuan'          => $request->satuan,
-            'total_saldo'     => $request->total_saldo,
+            'total_saldo'     => $request->total_saldo ?? 0,
         ]);
+
 
         // Redirect balik dengan pesan sukses
         return redirect()->route('materials')->with('success', 'Material berhasil ditambahkan!');
@@ -64,19 +63,19 @@ class MaterialController extends Controller
 
         // Validasi data
         $request->validate([
+            'plant'      => 'required|string|max:50',
             'kode_material'   => 'required|max:50|unique:materials,kode_material,' . $material->id,
             'uraian_material' => 'required|string|max:255',
-            'satuan'          => 'required|string|max:50',
-            'total_saldo'     => 'required|string|max:50',
+            'total_saldo'     => 'nullable|string|max:50',
         ]);
 
-        // Update data
         $material->update([
+            'plant'      => $request->plant,
             'kode_material'   => $request->kode_material,
             'uraian_material' => $request->uraian_material,
-            'satuan'          => $request->satuan,
-            'total_saldo'     => $request->total_saldo,
+            'total_saldo'     => $request->total_saldo ?? $material->total_saldo,
         ]);
+
 
         return redirect()->route('materials')->with('success', 'Material berhasil diperbarui!');
     }
