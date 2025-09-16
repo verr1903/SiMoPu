@@ -18,6 +18,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
+    Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');
+
     
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
     Route::post('pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');

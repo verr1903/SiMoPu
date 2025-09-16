@@ -7,6 +7,9 @@ use App\Models\Pengeluaran;
 use App\Models\Material;
 use App\Models\Notification;
 use App\Models\RealisasiPengeluaran;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class PengeluaranController extends Controller
 {
@@ -72,7 +75,7 @@ class PengeluaranController extends Controller
             'material_id'    => 'required|exists:materials,id',
             'tanggal_keluar' => 'required|date',
             'saldo_keluar'   => 'required|integer|min:1',
-            'sumber'         => 'required|string|max:255',
+            'sumber'         => 'required|string|max:255|regex:/^(?=.*[A-Z])(?=.*[0-9])[A-Z0-9]+$/',
             'status'         => 'nullable|string|max:50',
         ]);
 
@@ -259,5 +262,37 @@ class PengeluaranController extends Controller
 
         return redirect()->route('realisasiPengeluaran')
             ->with('success', 'Realisasi pengeluaran berhasil ditambahkan!');
+    }
+
+    public function printRealisasi($id)
+    {
+        $realisasi = RealisasiPengeluaran::with(['pengeluaran.material', 'pengeluaran.user'])->findOrFail($id);
+
+        // Ubah tanggal ke format Indonesia
+        $tanggalKeluar = Carbon::parse($realisasi->pengeluaran->tanggal_keluar)
+            ->translatedFormat('d M Y');
+
+        // Siapkan data untuk QR Code
+        $qrData = "Id: " . $realisasi->id . "\n" .
+            "Material: " . $realisasi->pengeluaran->material->kode_material . "\n" .
+            "Blok: " . $realisasi->pengeluaran->sumber . "\n" .
+            "Pengeluaran: " . $realisasi->cicilan_pengeluaran . "/Kg\n" .
+            "Tanggal Keluar: " . $tanggalKeluar;
+
+        $fileName = 'qrcode_realisasi_' . $realisasi->id . '.png';
+        $path = storage_path('app/public/qrcodes/' . $fileName);
+
+        if (!file_exists(storage_path('app/public/qrcodes'))) {
+            mkdir(storage_path('app/public/qrcodes'), 0755, true);
+        }
+
+        // Generate QR Code sebagai file PNG
+        QrCode::format('png')
+            ->size(300) // perbesar ukuran biar jelas
+            ->errorCorrection('H')
+            ->merge(storage_path('app/public/logo/logoqr.png'), 0.4, true)
+            ->generate($qrData, $path);
+
+        return view('admin.printRealisasi', compact('realisasi', 'fileName'));
     }
 }

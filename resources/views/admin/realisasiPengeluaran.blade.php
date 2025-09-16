@@ -155,7 +155,9 @@
                                                     </td>
                                                     <!-- Print -->
                                                     <td>
-                                                        <button class="btn btn-sm btn-secondary"><i class="bi bi-printer"></i> Print</button>
+                                                        <a href="{{ route('realisasi.print', $realisasi->id) }}" target="_blank" class="btn btn-sm btn-secondary">
+                                                            <i class="bi bi-printer"></i> Print
+                                                        </a>
                                                     </td>
                                                 </tr>
                                                 @empty

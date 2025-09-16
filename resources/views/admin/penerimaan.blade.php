@@ -120,7 +120,7 @@
                                             @forelse ($penerimaan as $data)
                                             <tr>
                                                 <td>{{ $data->material->kode_material }}</td>
-                                                <td class="text-bold-500">{{ $data->tanggal_terima }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($data->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                 <td>{{ $data->saldo_masuk }} {{ $data->material->satuan }}</td>
                                                 <td>{{ $data->sumber }}</td>
                                             </tr>

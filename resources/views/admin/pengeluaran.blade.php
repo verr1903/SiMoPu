@@ -99,7 +99,7 @@
 
                                     <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
                                     @auth
-                                   @if(Str::contains(Auth::user()->level_user, 'afdeling') || Auth::user()->level_user === 'administrator')
+                                    @if(Str::contains(Auth::user()->level_user, 'afdeling') || Auth::user()->level_user === 'administrator')
                                     <button type="button"
                                         class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
                                         style=" height: 45px;"
@@ -131,7 +131,7 @@
                                             @forelse ($Pengeluarans as $item)
                                             <tr>
                                                 <td>{{ $item->material->kode_material }}</td>
-                                                <td>{{ $item->tanggal_keluar }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
                                                 <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
                                                 <td>{{ $item->sumber }}</td>
                                                 <td>
@@ -194,7 +194,7 @@
                                             @if($item->status == 'diterima')
                                             <tr>
                                                 <td>{{ $item->material->kode_material }}</td>
-                                                <td>{{ $item->tanggal_keluar }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                 <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
                                                 <td>{{ $item->sumber }}</td>
                                             </tr>
@@ -277,7 +277,7 @@
                         <div class="mb-3">
                             <label for="sumber" class="form-label">Kode Blok</label>
                             <input type="text" class="form-control @error('sumber') is-invalid @enderror"
-                                name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: 12J" required>
+                                pattern="^(?=.*[A-Z])(?=.*[0-9])[A-Z0-9]+$" name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: 12J" required>
                             @error('sumber')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
