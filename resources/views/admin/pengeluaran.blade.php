@@ -55,171 +55,172 @@
             <section class="section">
                 <div class="row table-responsive" id="table-hover-row">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-content">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-content">
 
-                                <!-- Form Search + Sorting -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
                                     <!-- Form Search + Sorting -->
-                                    <form action="{{ route('pengeluaran') }}" method="GET"
-                                        class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
-                                        <input type="text" name="search" class="form-control"
-                                            placeholder="Cari pengeluaran..."
-                                            value="{{ request('search') }}">
+                                    <div class="d-flex mt-3 flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                                        <!-- Form Search + Sorting -->
+                                        <form action="{{ route('pengeluaran') }}" method="GET"
+                                            class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
+                                            <input type="text" name="search" class="form-control"
+                                                placeholder="Cari pengeluaran..."
+                                                value="{{ request('search') }}">
 
-                                        <!-- Sort Field -->
-                                        <select name="sort" class="form-select">
-                                            <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
-                                            <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
-                                            <option value="tanggal_keluar" {{ request('sort') == 'tanggal_keluar' ? 'selected' : '' }}>Tanggal Keluar</option>
-                                            <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
-                                            <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>BLOK</option>
-                                        </select>
+                                            <!-- Sort Field -->
+                                            <select name="sort" class="form-select">
+                                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
+                                                <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
+                                                <option value="tanggal_keluar" {{ request('sort') == 'tanggal_keluar' ? 'selected' : '' }}>Tanggal Keluar</option>
+                                                <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
+                                                <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>BLOK</option>
+                                            </select>
 
-                                        <!-- Sort Order -->
-                                        <select name="order" class="form-select">
-                                            <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
-                                            <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
-                                        </select>
+                                            <!-- Sort Order -->
+                                            <select name="order" class="form-select">
+                                                <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
+                                                <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
+                                            </select>
 
-                                        <button type="submit"
-                                            class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi bi-sort-alpha-down mb-2 me-1"></i> Urutkan
-                                        </button>
+                                            <button type="submit"
+                                                class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi bi-sort-alpha-down mb-2 me-1"></i> Urutkan
+                                            </button>
 
-                                        @if(request('search') || request('sort') || request('order'))
-                                        <a href="{{ route('pengeluaran') }}"
-                                            class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi bi-x mb-2 me-1"></i> Reset
-                                        </a>
-                                        @endif
-                                    </form>
-
-                                    <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
-                                    @auth
-                                    @if(Str::contains(Auth::user()->level_user, 'afdeling') || Auth::user()->level_user === 'administrator')
-                                    <button type="button"
-                                        class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
-                                        style=" height: 45px;"
-                                        data-bs-toggle="modal" data-bs-target="#tambah">
-                                        <i class="bi bi-plus mb-2 me-1"></i>Pengajuan
-                                    </button>
-                                    @endif
-                                    @endauth
-                                </div>
-
-
-                                <!-- table hover -->
-                                <div class="table-responsive p-5">
-
-                                    {{-- 🔹 Tabel dengan STATUS & AKSI --}}
-                                    @auth
-                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                    <table class="table table-hover mb-4 text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>KODE MATERIAL</th>
-                                                <th>TANGGAL KELUAR</th>
-                                                <th>SALDO KELUAR</th>
-                                                <th>BLOK</th>
-                                                <th>AKSI</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($Pengeluarans as $item)
-                                            <tr>
-                                                <td>{{ $item->material->kode_material }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
-                                                <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
-                                                <td>{{ $item->sumber }}</td>
-                                                <td>
-                                                    @if($item->status == 'menunggu')
-                                                    <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="status" value="diterima">
-                                                        <button type="submit" class="btn btn-success btn-sm mb-1">
-                                                            <i class="bi bi-check-circle"></i> Terima
-                                                        </button>
-                                                    </form>
-                                                    <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <input type="hidden" name="status" value="ditolak">
-                                                        <button type="submit" class="btn btn-danger btn-sm mb-1">
-                                                            <i class="bi bi-x-circle"></i> Tolak
-                                                        </button>
-                                                    </form>
-                                                    @elseif($item->status == 'diterima')
-                                                    <button class="btn btn-success btn-sm disabled" style="pointer-events: none;">
-                                                        <i class="bi bi-check-circle"></i> Diterima
-                                                    </button>
-                                                    @elseif($item->status == 'ditolak')
-                                                    <span class="btn btn-danger btn-sm disabled" style="pointer-events: none;">
-                                                        <i class="bi bi-x-circle"></i> Ditolak
-                                                    </span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="6">Tidak ada data pengeluaran</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <!-- 📄 Pagination -->
-                                    <div class="mt-3">
-                                        {{ $Pengeluarans->links('pagination::bootstrap-5') }}
-                                    </div>
-                                    @endif
-                                    @endauth
-
-                                    {{-- 🔹 Tabel tanpa STATUS (hanya yang diterima) --}}
-                                    @auth
-                                    @if(Str::contains(Auth::user()->level_user, 'afdeling'))
-                                    <table class="table table-hover mb-4 text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>KODE MATERIAL</th>
-                                                <th>TANGGAL KELUAR</th>
-                                                <th>SALDO KELUAR</th>
-                                                <th>BLOK</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($PengeluaransDiterima as $item)
-                                            @if($item->status == 'diterima')
-                                            <tr>
-                                                <td>{{ $item->material->kode_material }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
-                                                <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
-                                                <td>{{ $item->sumber }}</td>
-                                            </tr>
+                                            @if(request('search') || request('sort') || request('order'))
+                                            <a href="{{ route('pengeluaran') }}"
+                                                class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi bi-x mb-2 me-1"></i> Reset
+                                            </a>
                                             @endif
-                                            @empty
-                                            <tr>
-                                                <td colspan="4">Tidak ada data pengeluaran</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <!-- 📄 Pagination -->
-                                    <div class="mt-3">
-                                        {{ $PengeluaransDiterima->links('pagination::bootstrap-5') }}
+                                        </form>
+
+                                        <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
+                                        @auth
+                                        @if(Str::contains(Auth::user()->level_user, 'afdeling') || Auth::user()->level_user === 'administrator')
+                                        <button type="button"
+                                            class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
+                                            style=" height: 45px;"
+                                            data-bs-toggle="modal" data-bs-target="#tambah">
+                                            <i class="bi bi-plus mb-2 me-1"></i>Pengajuan
+                                        </button>
+                                        @endif
+                                        @endauth
                                     </div>
-                                    @endif
-                                    @endauth
+
+
+                                    <!-- table hover -->
+                                    <div class="table-responsive p-5">
+
+                                        {{-- 🔹 Tabel dengan STATUS & AKSI --}}
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        <table class="table table-hover mb-4 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>TANGGAL KELUAR</th>
+                                                    <th>SALDO KELUAR</th>
+                                                    <th>BLOK</th>
+                                                    <th>AKSI</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($Pengeluarans as $item)
+                                                <tr>
+                                                    <td>{{ $item->material->kode_material }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
+                                                    <td>{{ $item->sumber }}</td>
+                                                    <td>
+                                                        @if($item->status == 'menunggu')
+                                                        <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="diterima">
+                                                            <button type="submit" class="btn btn-success btn-sm mb-1">
+                                                                <i class="bi bi-check-circle"></i> Terima
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="ditolak">
+                                                            <button type="submit" class="btn btn-danger btn-sm mb-1">
+                                                                <i class="bi bi-x-circle"></i> Tolak
+                                                            </button>
+                                                        </form>
+                                                        @elseif($item->status == 'diterima')
+                                                        <button class="btn btn-success btn-sm disabled" style="pointer-events: none;">
+                                                            <i class="bi bi-check-circle"></i> Diterima
+                                                        </button>
+                                                        @elseif($item->status == 'ditolak')
+                                                        <span class="btn btn-danger btn-sm disabled" style="pointer-events: none;">
+                                                            <i class="bi bi-x-circle"></i> Ditolak
+                                                        </span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="6">Tidak ada data pengeluaran</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <!-- 📄 Pagination -->
+                                        <div class="mt-3">
+                                            {{ $Pengeluarans->links('pagination::bootstrap-5') }}
+                                        </div>
+                                        @endif
+                                        @endauth
+
+                                        {{-- 🔹 Tabel tanpa STATUS (hanya yang diterima) --}}
+                                        @auth
+                                        @if(Str::contains(Auth::user()->level_user, 'afdeling'))
+                                        <table class="table table-hover mb-4 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>TANGGAL KELUAR</th>
+                                                    <th>SALDO KELUAR</th>
+                                                    <th>BLOK</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($PengeluaransDiterima as $item)
+                                                @if($item->status == 'diterima')
+                                                <tr>
+                                                    <td>{{ $item->material->kode_material }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
+                                                    <td>{{ $item->sumber }}</td>
+                                                </tr>
+                                                @endif
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4">Tidak ada data pengeluaran</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <!-- 📄 Pagination -->
+                                        <div class="mt-3">
+                                            {{ $PengeluaransDiterima->links('pagination::bootstrap-5') }}
+                                        </div>
+                                        @endif
+                                        @endauth
 
 
 
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         </div>
     </div>

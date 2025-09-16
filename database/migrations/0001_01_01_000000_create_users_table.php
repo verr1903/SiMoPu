@@ -17,11 +17,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('remember_token', 100)->nullable();
             $table->string('password');
-            $table->string('level_user');
+            $table->string('level_user')->nullable();
             $table->timestamps();
         });
-
-    
     }
 
     /**

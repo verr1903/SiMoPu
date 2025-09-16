@@ -55,11 +55,11 @@
                 <section class="section">
                     <div class="row table-responsive" id="table-hover-row">
                         <div class="col-12">
-                            <div class="card">
+                            <div class="card shadow">
                                 <div class="card-content">
 
                                     <!-- Form Search + Sorting -->
-                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                                    <div class="d-flex mt-3 flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
                                         <form action="{{ route('realisasiPengeluaran') }}" method="GET"
                                             class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
 
@@ -130,7 +130,7 @@
 
                                                     <!-- Detail -->
                                                     <td>
-                                                        <button class="btn btn-sm btn-info btn-detail"
+                                                        <button class="btn btn-sm btn-info btn-detail text-white"
                                                             data-level="{{ $realisasi->pengeluaran->user->level_user }}"
                                                             data-username="{{ $realisasi->pengeluaran->user->username }}"
                                                             data-sumber="{{ $realisasi->pengeluaran->sumber }}"

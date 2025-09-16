@@ -54,94 +54,95 @@
             <section class="section">
                 <div class="row table-responsive" id="table-hover-row">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-content">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-content">
 
-                                <!-- 🔍 Search & Sort -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
-                                    <form action="{{ route('penerimaan') }}" method="GET"
-                                        class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
-                                        <input type="text" name="search" class="form-control"
-                                            placeholder="Cari pengeluaran..."
-                                            value="{{ request('search') }}">
+                                    <!-- Form Search + Sorting -->
+                                    <div class="d-flex mt-3 flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                                        <form action="{{ route('penerimaan') }}" method="GET"
+                                            class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
+                                            <input type="text" name="search" class="form-control"
+                                                placeholder="Cari pengeluaran..."
+                                                value="{{ request('search') }}">
 
-                                        <select name="sort" class="form-select">
-                                            <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
-                                            <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
-                                            <option value="tanggal_terima" {{ request('sort') == 'tanggal_terima' ? 'selected' : '' }}>Tanggal Terima</option>
-                                            <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
-                                            <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>Sumber</option>
-                                        </select>
+                                            <select name="sort" class="form-select">
+                                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
+                                                <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
+                                                <option value="tanggal_terima" {{ request('sort') == 'tanggal_terima' ? 'selected' : '' }}>Tanggal Terima</option>
+                                                <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
+                                                <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>Sumber</option>
+                                            </select>
 
-                                        <select name="order" class="form-select">
-                                            <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
-                                            <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
-                                        </select>
+                                            <select name="order" class="form-select">
+                                                <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
+                                                <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
+                                            </select>
 
-                                        <button type="submit"
-                                            class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
+                                            <button type="submit"
+                                                class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
+                                            </button>
+
+                                            @if(request('search') || request('sort') || request('order'))
+                                            <a href="{{ route('penerimaan') }}"
+                                                class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi mb-2 bi-x"></i> Reset
+                                            </a>
+                                            @endif
+                                        </form>
+                                        <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        <button type="button"
+                                            class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
+                                            style=" height: 45px;"
+                                            data-bs-toggle="modal" data-bs-target="#tambah">
+                                            <i class="bi bi-plus mb-2 me-1"></i>Tambah
                                         </button>
-
-                                        @if(request('search') || request('sort') || request('order'))
-                                        <a href="{{ route('penerimaan') }}"
-                                            class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi mb-2 bi-x"></i> Reset
-                                        </a>
                                         @endif
-                                    </form>
-                                    <!-- Tombol Tambah (Kanan di desktop, bawah di mobile) -->
-                                    @auth
-                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                    <button type="button"
-                                        class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
-                                        style=" height: 45px;"
-                                        data-bs-toggle="modal" data-bs-target="#tambah">
-                                        <i class="bi bi-plus mb-2 me-1"></i>Tambah
-                                    </button>
-                                    @endif
-                                    @endauth
-                                </div>
-
-                                <!-- 📊 Table -->
-                                <div class="table-responsive p-5">
-                                    <table class="table table-hover mb-0 text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>KODE MATERIAL</th>
-                                                <th>TANGGAL TERIMA</th>
-                                                <th>SALDO MASUK</th>
-                                                <th>SUMBER</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($penerimaan as $data)
-                                            <tr>
-                                                <td>{{ $data->material->kode_material }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($data->tanggal_terima)->translatedFormat('d M Y') }}</td>
-                                                <td>{{ $data->saldo_masuk }} {{ $data->material->satuan }}</td>
-                                                <td>{{ $data->sumber }}</td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="4">Tidak ada data penerimaan</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-
-                                    <!-- 📄 Pagination -->
-                                    <div class="mt-3">
-                                        {{ $penerimaan->links('pagination::bootstrap-5') }}
+                                        @endauth
                                     </div>
-                                </div>
 
+                                    <!-- 📊 Table -->
+                                    <div class="table-responsive p-5">
+                                        <table class="table table-hover mb-0 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>TANGGAL TERIMA</th>
+                                                    <th>SALDO MASUK</th>
+                                                    <th>SUMBER</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($penerimaan as $data)
+                                                <tr>
+                                                    <td>{{ $data->material->kode_material }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($data->tanggal_terima)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ $data->saldo_masuk }} {{ $data->material->satuan }}</td>
+                                                    <td>{{ $data->sumber }}</td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4">Tidak ada data penerimaan</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+
+                                        <!-- 📄 Pagination -->
+                                        <div class="mt-3">
+                                            {{ $penerimaan->links('pagination::bootstrap-5') }}
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
         </div>
     </div>

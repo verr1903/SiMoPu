@@ -18,15 +18,56 @@
 </head>
 
 <body>
+
+    <!-- ✅ Notifikasi -->
+    @if (session('error'))
+    <div class="mt-3 alert alert-danger alert-dismissible fade show notif-alert" role="alert" id="alertError">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if (session('success'))
+    <div class="mt-3 alert alert-success alert-dismissible fade show notif-alert" role="alert" id="alertSuccess">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div class="mt-3 alert alert-danger alert-dismissible fade show notif-alert" role="alert" id="alertValidation">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $err)
+            <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+    <!-- ✅ End Notifikasi -->
+
+
     <div class="container" id="container">
         <!-- Register -->
         <div class="form-container sign-up">
-            <form>
-                <h1 class="mb-4">Daftar Akun</h1>
-                <input type="text" class="form-control p-3" placeholder="Nama Lengkap" />
-                <input type="email" class="form-control p-3" placeholder="Alamat Email" />
-                <input type="password" class="form-control p-3" placeholder="Kata Sandi" />
-                <button class="btn btn-primary mt-3 py-2 px-5">Daftar</button>
+
+            <form action="{{ route('register.process') }}" method="POST">
+                @csrf
+                <h1 class="mb-1">Daftar Akun</h1>
+
+                <input type="text" name="username" class="form-control p-3 mb-2" placeholder="Nama Lengkap" required />
+                <input type="email" name="email" class="form-control p-3 mb-2" placeholder="Alamat Email" required />
+                <input type="password" name="password" class="form-control p-3 mb-2" placeholder="Kata Sandi" required />
+                <input type="password" name="password_confirmation" class="form-control p-3 mb-2" placeholder="Konfirmasi Kata Sandi" required />
+                <select name="level_user" class="form-control p-3 mb-2" required>
+                    <option value="" disabled selected>Pilih Afdeling</option>
+                    <option value="afdeling 01">Afdeling 01</option>
+                    <option value="afdeling 02">Afdeling 02</option>
+                    <option value="afdeling 03">Afdeling 03</option>
+                    <option value="afdeling 04">Afdeling 04</option>
+                </select>
+
+                <button class="btn btn-primary mt-2 py-2 px-5">Daftar</button>
             </form>
         </div>
 
@@ -35,31 +76,12 @@
             <form action="{{ route('login.process') }}" method="POST">
                 @csrf
                 <h1 class="mb-4">Masuk</h1>
-
-                <!-- Alert Notifikasi -->
-                @if (session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert" style="font-size: 0.85rem;">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <script>
-                    setTimeout(function() {
-                        const alertElement = document.getElementById('errorAlert');
-                        if (alertElement) {
-                            const alert = new bootstrap.Alert(alertElement);
-                            alert.close();
-                        }
-                    }, 2500);
-                </script>
-                @endif
-
                 <input type="email" name="email" class="form-control p-3" placeholder="Alamat Email" required />
                 <input type="password" name="password" class="form-control p-3" placeholder="Kata Sandi" required />
                 <button class="btn btn-primary mt-4 py-2 px-5">Login</button>
             </form>
-
-
         </div>
+
 
         <!-- Toggle Panel -->
         <div class="toggle-container">
@@ -81,6 +103,7 @@
     <!-- ✅ Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+
     <script>
         const container = document.getElementById("container");
         const registerBtn = document.getElementById("register");
@@ -97,8 +120,23 @@
             document.body.style.setProperty("--y", `${y}%`);
         });
     </script>
+    <script>
+        // Tutup otomatis semua alert bootstrap setelah 3 detik
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach((alert) => {
+                let bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 3000);
+    </script>
 
-    
+    <!-- agar regis teteap terbuka -->
+    @if(session('showRegister'))
+    <script>
+        document.getElementById("container").classList.add("active");
+    </script>
+    @endif
+
 
 </body>
 

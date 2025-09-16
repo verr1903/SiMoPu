@@ -11,6 +11,7 @@ use App\Http\Controllers\AuthController;
 Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('isGuest');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/register', [AuthController::class, 'register'])->name('register.process');
 
 
 Route::middleware(['auth'])->group(function () {
@@ -20,7 +21,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
     Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');
 
-    
+
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
     Route::post('pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
     Route::patch('/pengeluaran/{id}/status', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus');

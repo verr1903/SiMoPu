@@ -38,258 +38,260 @@
             <section class="section">
                 <div class="row table-responsive" id="table-hover-row">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-content">
-                                <!-- Button Tambah & Form Search -->
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                        <div class="col-12">
+                            <div class="card shadow">
+                                <div class="card-content">
+
                                     <!-- Form Search + Sorting -->
-                                    <form action="{{ route('materials') }}" method="GET"
-                                        class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
-                                        <input type="text" name="search" class="form-control"
-                                            placeholder="Cari pengeluaran..."
-                                            value="{{ request('search') }}">
+                                    <div class="d-flex mt-3 flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
+                                        <!-- Form Search + Sorting -->
+                                        <form action="{{ route('materials') }}" method="GET"
+                                            class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
+                                            <input type="text" name="search" class="form-control"
+                                                placeholder="Cari pengeluaran..."
+                                                value="{{ request('search') }}">
 
-                                        <!-- Kolom Sort -->
-                                        <select name="sort" class="form-select">
-                                            <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
-                                            <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
-                                            <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
-                                        </select>
+                                            <!-- Kolom Sort -->
+                                            <select name="sort" class="form-select">
+                                                <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
+                                                <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
+                                                <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
+                                            </select>
 
-                                        <!-- Order (Terkecil/Terbesar) -->
-                                        <select name="order" class="form-select">
-                                            <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
-                                            <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
-                                        </select>
+                                            <!-- Order (Terkecil/Terbesar) -->
+                                            <select name="order" class="form-select">
+                                                <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
+                                                <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
+                                            </select>
 
-                                        <button type="submit"
-                                            class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
+                                            <button type="submit"
+                                                class="btn btn-primary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi mb-2 bi-sort-alpha-down"></i> Urutkan
+                                            </button>
+
+                                            @if(request('search') || request('sort') || request('order'))
+                                            <a href="{{ route('materials') }}"
+                                                class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
+                                                style="height: 45px;">
+                                                <i class="bi mb-2 bi-x"></i> Reset
+                                            </a>
+                                            @endif
+                                        </form>
+
+                                        <!-- Tombol Tambah (Kanan) -->
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        <button type="button"
+                                            class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
+                                            style=" height: 45px;" data-bs-toggle="modal"
+                                            data-bs-target="#tambah">
+                                            <i class="bi bi-plus mb-2 me-1"></i>Tambah
                                         </button>
-
-                                        @if(request('search') || request('sort') || request('order'))
-                                        <a href="{{ route('materials') }}"
-                                            class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
-                                            style="height: 45px;">
-                                            <i class="bi mb-2 bi-x"></i> Reset
-                                        </a>
                                         @endif
-                                    </form>
-
-                                    <!-- Tombol Tambah (Kanan) -->
-                                    @auth
-                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                    <button type="button"
-                                        class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
-                                        style=" height: 45px;" data-bs-toggle="modal"
-                                        data-bs-target="#tambah">
-                                        <i class="bi bi-plus mb-2 me-1"></i>Tambah
-                                    </button>
-                                    @endif
-                                    @endauth
-                                </div>
+                                        @endauth
+                                    </div>
 
 
-                                <!-- table hover -->
-                                <div class="table-responsive px-5 pt-4 pb-5">
-                                    @auth
-                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                    <table class="table table-hover mb-0 text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>NO</th>
-                                                <th>PLANT</th>
-                                                <th>KODE MATERIAL</th>
-                                                <th>URAIAN MATERIAL</th>
-                                                <th>TOTAL SALDO</th>
-                                                <th>SATUAN</th>
-                                                <th>AKSI</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($materials as $index => $material)
-                                            <tr>
-                                                <td>{{ $materials->firstItem() + $index }}</td>
-                                                <td>{{ $material->plant }}</td>
-                                                <td>{{ $material->kode_material }}</td>
-                                                <td class="text-bold-500">{{ $material->uraian_material }}</td>
-                                                <td>{{ $material->total_saldo }}</td>
-                                                <td class="text-bold-500">{{ $material->satuan }}</td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <!-- Tombol Edit -->
-                                                        <!-- Tombol Edit Material -->
-                                                        <button
-                                                            type="button"
-                                                            title="Edit"
-                                                            style="border-radius: 50%;"
-                                                            class="btn btn-warning btn-sm btn-edit me-1 text-white"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#editModal"
-                                                            data-id="{{ $material->id }}"
-                                                            data-plant="{{ $material->plant }}"
-                                                            data-kode="{{ $material->kode_material }}"
-                                                            data-uraian="{{ $material->uraian_material }}"
-                                                            data-satuan="{{ $material->satuan }}">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </button>
-
-
-                                                        <!-- Tombol Hapus -->
-                                                        <form id="delete-form-{{ $material->id }}" action="{{ route('material.destroy', $material->id) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="button" class="btn btn-sm btn-danger rounded-circle"
-                                                                title="Hapus"
+                                    <!-- table hover -->
+                                    <div class="table-responsive px-5 pt-4 pb-5">
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        <table class="table table-hover mb-0 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>NO</th>
+                                                    <th>PLANT</th>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>URAIAN MATERIAL</th>
+                                                    <th>TOTAL SALDO</th>
+                                                    <th>SATUAN</th>
+                                                    <th>AKSI</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($materials as $index => $material)
+                                                <tr>
+                                                    <td>{{ $materials->firstItem() + $index }}</td>
+                                                    <td>{{ $material->plant }}</td>
+                                                    <td>{{ $material->kode_material }}</td>
+                                                    <td class="text-bold-500">{{ $material->uraian_material }}</td>
+                                                    <td>{{ $material->total_saldo }}</td>
+                                                    <td class="text-bold-500">{{ $material->satuan }}</td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <!-- Tombol Edit -->
+                                                            <!-- Tombol Edit Material -->
+                                                            <button
+                                                                type="button"
+                                                                title="Edit"
+                                                                style="border-radius: 50%;"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editModal"
                                                                 data-id="{{ $material->id }}"
-                                                                onclick="confirmDelete(this)">
-                                                                <i class="bi bi-trash"></i>
+                                                                data-plant="{{ $material->plant }}"
+                                                                data-kode="{{ $material->kode_material }}"
+                                                                data-uraian="{{ $material->uraian_material }}"
+                                                                data-satuan="{{ $material->satuan }}">
+                                                                <i class="bi bi-pencil"></i>
                                                             </button>
 
-                                                        </form>
+
+                                                            <!-- Tombol Hapus -->
+                                                            <form id="delete-form-{{ $material->id }}" action="{{ route('material.destroy', $material->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                                                    title="Hapus"
+                                                                    data-id="{{ $material->id }}"
+                                                                    onclick="confirmDelete(this)">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+
+                                                            </form>
 
 
 
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="4">Tidak ada data material</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <!-- Pagination -->
-                                    <div class="mt-3">
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4">Tidak ada data material</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <!-- Pagination -->
                                         <div class="mt-3">
-                                            @if ($materials->hasPages())
-                                            <nav>
-                                                <ul class="pagination justify-content-center my-3">
-                                                    {{-- Tombol Sebelumnya --}}
-                                                    @if ($materials->onFirstPage())
-                                                    <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&laquo;</span></li>
-                                                    @else
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill" href="{{ $materials->previousPageUrl() }}" rel="prev">&laquo;</a>
-                                                    </li>
-                                                    @endif
+                                            <div class="mt-3">
+                                                @if ($materials->hasPages())
+                                                <nav>
+                                                    <ul class="pagination justify-content-center my-3">
+                                                        {{-- Tombol Sebelumnya --}}
+                                                        @if ($materials->onFirstPage())
+                                                        <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&laquo;</span></li>
+                                                        @else
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill" href="{{ $materials->previousPageUrl() }}" rel="prev">&laquo;</a>
+                                                        </li>
+                                                        @endif
 
-                                                    {{-- Nomor Halaman --}}
-                                                    @foreach ($materials->links()->elements[0] as $page => $url)
-                                                    @if ($page == $materials->currentPage())
-                                                    <li class="page-item me-2 active">
-                                                        <span class="page-link rounded-pill bg-primary border-0 shadow-sm">{{ $page }}</span>
-                                                    </li>
-                                                    @else
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill hover-shadow" href="{{ $url }}">{{ $page }}</a>
-                                                    </li>
-                                                    @endif
-                                                    @endforeach
+                                                        {{-- Nomor Halaman --}}
+                                                        @foreach ($materials->links()->elements[0] as $page => $url)
+                                                        @if ($page == $materials->currentPage())
+                                                        <li class="page-item me-2 active">
+                                                            <span class="page-link rounded-pill bg-primary border-0 shadow-sm">{{ $page }}</span>
+                                                        </li>
+                                                        @else
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill hover-shadow" href="{{ $url }}">{{ $page }}</a>
+                                                        </li>
+                                                        @endif
+                                                        @endforeach
 
-                                                    {{-- Tombol Berikutnya --}}
-                                                    @if ($materials->hasMorePages())
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill" href="{{ $materials->nextPageUrl() }}" rel="next">&raquo;</a>
-                                                    </li>
-                                                    @else
-                                                    <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&raquo;</span></li>
-                                                    @endif
-                                                </ul>
-                                            </nav>
-                                            @endif
+                                                        {{-- Tombol Berikutnya --}}
+                                                        @if ($materials->hasMorePages())
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill" href="{{ $materials->nextPageUrl() }}" rel="next">&raquo;</a>
+                                                        </li>
+                                                        @else
+                                                        <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&raquo;</span></li>
+                                                        @endif
+                                                    </ul>
+                                                </nav>
+                                                @endif
+                                            </div>
+
                                         </div>
+                                        <!-- end pagination -->
+                                        @endif
+                                        @endauth
+
+                                        @auth
+                                        @if(Str::contains(Auth::user()->level_user, 'afdeling'))
+                                        <table class="table table-hover mb-0 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>NO</th>
+                                                    <th>PLANT</th>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>URAIAN MATERIAL</th>
+                                                    <th>TOTAL SALDO</th>
+                                                    <th>SATUAN</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($materials as $index => $material)
+                                                <tr>
+                                                    <td>{{ $materials->firstItem() + $index }}</td>
+                                                    <td>{{ $material->plant }}</td>
+                                                    <td>{{ $material->kode_material }}</td>
+                                                    <td class="text-bold-500">{{ $material->uraian_material }}</td>
+                                                    <td>{{ $material->total_saldo }}</td>
+                                                    <td class="text-bold-500">{{ $material->satuan }}</td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4">Tidak ada data material</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <!-- Pagination -->
+                                        <div class="mt-3">
+                                            <div class="mt-3">
+                                                @if ($materials->hasPages())
+                                                <nav>
+                                                    <ul class="pagination justify-content-center my-3">
+                                                        {{-- Tombol Sebelumnya --}}
+                                                        @if ($materials->onFirstPage())
+                                                        <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&laquo;</span></li>
+                                                        @else
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill" href="{{ $materials->previousPageUrl() }}" rel="prev">&laquo;</a>
+                                                        </li>
+                                                        @endif
+
+                                                        {{-- Nomor Halaman --}}
+                                                        @foreach ($materials->links()->elements[0] as $page => $url)
+                                                        @if ($page == $materials->currentPage())
+                                                        <li class="page-item me-2 active">
+                                                            <span class="page-link rounded-pill bg-primary border-0 shadow-sm">{{ $page }}</span>
+                                                        </li>
+                                                        @else
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill hover-shadow" href="{{ $url }}">{{ $page }}</a>
+                                                        </li>
+                                                        @endif
+                                                        @endforeach
+
+                                                        {{-- Tombol Berikutnya --}}
+                                                        @if ($materials->hasMorePages())
+                                                        <li class="page-item me-2">
+                                                            <a class="page-link rounded-pill" href="{{ $materials->nextPageUrl() }}" rel="next">&raquo;</a>
+                                                        </li>
+                                                        @else
+                                                        <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&raquo;</span></li>
+                                                        @endif
+                                                    </ul>
+                                                </nav>
+                                                @endif
+                                            </div>
+
+                                        </div>
+                                        <!-- end pagination -->
+                                        @endif
+                                        @endauth
+
+
 
                                     </div>
-                                    <!-- end pagination -->
-                                    @endif
-                                    @endauth
-
-                                    @auth
-                                    @if(Str::contains(Auth::user()->level_user, 'afdeling'))
-                                    <table class="table table-hover mb-0 text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>NO</th>
-                                                <th>PLANT</th>
-                                                <th>KODE MATERIAL</th>
-                                                <th>URAIAN MATERIAL</th>
-                                                <th>TOTAL SALDO</th>
-                                                <th>SATUAN</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($materials as $index => $material)
-                                            <tr>
-                                                <td>{{ $materials->firstItem() + $index }}</td>
-                                                <td>{{ $material->plant }}</td>
-                                                <td>{{ $material->kode_material }}</td>
-                                                <td class="text-bold-500">{{ $material->uraian_material }}</td>
-                                                <td>{{ $material->total_saldo }}</td>
-                                                <td class="text-bold-500">{{ $material->satuan }}</td>
-                                            </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="4">Tidak ada data material</td>
-                                            </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <!-- Pagination -->
-                                    <div class="mt-3">
-                                        <div class="mt-3">
-                                            @if ($materials->hasPages())
-                                            <nav>
-                                                <ul class="pagination justify-content-center my-3">
-                                                    {{-- Tombol Sebelumnya --}}
-                                                    @if ($materials->onFirstPage())
-                                                    <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&laquo;</span></li>
-                                                    @else
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill" href="{{ $materials->previousPageUrl() }}" rel="prev">&laquo;</a>
-                                                    </li>
-                                                    @endif
-
-                                                    {{-- Nomor Halaman --}}
-                                                    @foreach ($materials->links()->elements[0] as $page => $url)
-                                                    @if ($page == $materials->currentPage())
-                                                    <li class="page-item me-2 active">
-                                                        <span class="page-link rounded-pill bg-primary border-0 shadow-sm">{{ $page }}</span>
-                                                    </li>
-                                                    @else
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill hover-shadow" href="{{ $url }}">{{ $page }}</a>
-                                                    </li>
-                                                    @endif
-                                                    @endforeach
-
-                                                    {{-- Tombol Berikutnya --}}
-                                                    @if ($materials->hasMorePages())
-                                                    <li class="page-item me-2">
-                                                        <a class="page-link rounded-pill" href="{{ $materials->nextPageUrl() }}" rel="next">&raquo;</a>
-                                                    </li>
-                                                    @else
-                                                    <li class="page-item me-2 disabled"><span class="page-link rounded-pill">&raquo;</span></li>
-                                                    @endif
-                                                </ul>
-                                            </nav>
-                                            @endif
-                                        </div>
-
-                                    </div>
-                                    <!-- end pagination -->
-                                    @endif
-                                    @endauth
-
-
-
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
             </section>
             <!-- Hoverable rows end -->
 
