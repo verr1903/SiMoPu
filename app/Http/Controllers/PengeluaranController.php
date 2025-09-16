@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Models\Pengeluaran;
 use App\Models\Material;
 use App\Models\Notification;
@@ -75,7 +76,7 @@ class PengeluaranController extends Controller
             'material_id'    => 'required|exists:materials,id',
             'tanggal_keluar' => 'required|date',
             'saldo_keluar'   => 'required|integer|min:1',
-            'sumber'         => 'required|string|max:255|regex:/^(?=.*[A-Z])(?=.*[0-9])[A-Z0-9]+$/',
+            'sumber' => ['required', 'string', 'max:255', 'regex:/^([0-9]+[A-Z]+)([\s,]+[0-9]+[A-Z]+)*$/'],
             'status'         => 'nullable|string|max:50',
         ]);
 
@@ -233,8 +234,6 @@ class PengeluaranController extends Controller
         ]);
     }
 
-
-
     public function storeRealisasi(Request $request)
     {
         // Validasi input
@@ -273,11 +272,14 @@ class PengeluaranController extends Controller
             ->translatedFormat('d M Y');
 
         // Siapkan data untuk QR Code
-        $qrData = "Id: " . $realisasi->id . "\n" .
-            "Material: " . $realisasi->pengeluaran->material->kode_material . "\n" .
-            "Blok: " . $realisasi->pengeluaran->sumber . "\n" .
-            "Pengeluaran: " . $realisasi->cicilan_pengeluaran . "/Kg\n" .
-            "Tanggal Keluar: " . $tanggalKeluar;
+        // $qrData = "Id: " . $realisasi->id . "\n" .
+        //     "Kode Material: " . $realisasi->pengeluaran->material->kode_material . "\n" .
+        //     "Uraian Material: " . $realisasi->pengeluaran->material->uraian_material . "\n" .
+        //     "Afdeling: " . $realisasi->pengeluaran->user->level_user . "\n" .
+        //     "Blok: " . $realisasi->pengeluaran->sumber . "\n" .
+        //     "Pengeluaran: " . $realisasi->cicilan_pengeluaran . "/Kg\n" .
+        //     "Tanggal Keluar: " . $tanggalKeluar;
+        $qrData = route('realisasi.scan', ['id' => $realisasi->id]);
 
         $fileName = 'qrcode_realisasi_' . $realisasi->id . '.png';
         $path = storage_path('app/public/qrcodes/' . $fileName);
@@ -294,5 +296,48 @@ class PengeluaranController extends Controller
             ->generate($qrData, $path);
 
         return view('admin.printRealisasi', compact('realisasi', 'fileName'));
+    }
+
+    public function scanUpdate($id)
+    {
+        $realisasi = RealisasiPengeluaran::findOrFail($id);
+
+        $now = \Carbon\Carbon::now('Asia/Jakarta');
+
+        if (is_null($realisasi->scan_keluar)) {
+            // Scan pertama kali
+            $realisasi->update([
+                'scan_keluar' => $now,
+            ]);
+
+            return response()->json([
+                'message' => 'Scan keluar berhasil dicatat',
+                'time' => $now->translatedFormat('d F Y H:i:s'),
+            ]);
+        } else {
+            // Scan kedua atau lebih
+            if (is_null($realisasi->scan_akhir)) {
+                $scanKeluar = \Carbon\Carbon::parse($realisasi->scan_keluar);
+
+                if ($scanKeluar->diffInMinutes($now) >= 1) {
+                    $realisasi->update([
+                        'scan_akhir' => $now,
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Scan akhir berhasil dicatat',
+                        'time' => $now->translatedFormat('d F Y H:i:s'),
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Scan akhir hanya bisa dilakukan minimal 1 menit setelah scan keluar',
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'QR ini sudah discan 2 kali (scan keluar & scan akhir sudah tercatat)',
+                ], 400);
+            }
+        }
     }
 }

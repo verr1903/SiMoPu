@@ -12,6 +12,8 @@ class RealisasiPengeluaran extends Model
     protected $fillable = [
         'pengeluaran_id',
         'cicilan_pengeluaran',
+        'scan_keluar',
+        'scan_akhir',
     ];
 
     /**

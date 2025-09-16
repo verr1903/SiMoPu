@@ -138,6 +138,19 @@
                 @endif
                 @endauth
 
+                <!-- Kelola User -->
+                @auth
+                @if(Auth::user()->level_user === 'administrator')
+                <li class="sidebar-item {{ request()->routeIs('users') ? 'active' : '' }}">
+                    <a href="{{ route('users') }}" class="sidebar-link">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Kelola User</span>
+                    </a>
+                </li>
+                @endif
+                @endauth
+
+
             </ul>
         </div>
 

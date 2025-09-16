@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('pengeluaran_id')->constrained()->onDelete('cascade');
             $table->integer('cicilan_pengeluaran');
+            $table->dateTime('scan_keluar')->nullable();
+            $table->dateTime('scan_akhir')->nullable();
             $table->timestamps();
         });
     }

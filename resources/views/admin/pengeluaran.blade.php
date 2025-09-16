@@ -278,7 +278,7 @@
                         <div class="mb-3">
                             <label for="sumber" class="form-label">Kode Blok</label>
                             <input type="text" class="form-control @error('sumber') is-invalid @enderror"
-                                pattern="^(?=.*[A-Z])(?=.*[0-9])[A-Z0-9]+$" name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: 12J" required>
+                                pattern="^([0-9]+[A-Z]+)(,\s*[0-9]+[A-Z]+)*$"  name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: 23K, 42L"  required>
                             @error('sumber')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

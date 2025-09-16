@@ -146,13 +146,14 @@
 
                                                     <!-- Scan keluar -->
                                                     <td>
-                                                        15 Sep 2025 14:32:45
-                                                    </td>
+    {{ $realisasi->scan_keluar 
+        ? \Carbon\Carbon::parse($realisasi->scan_keluar)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') 
+        : '-' }}
+</td>
+
 
                                                     <!-- Scan selesai -->
-                                                    <td>
-                                                        15 Sep 2025 16:10:22
-                                                    </td>
+                                                   <td>{{ $realisasi->scan_akhir }}</td>
                                                     <!-- Print -->
                                                     <td>
                                                         <a href="{{ route('realisasi.print', $realisasi->id) }}" target="_blank" class="btn btn-sm btn-secondary">

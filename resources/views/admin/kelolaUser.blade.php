@@ -11,7 +11,7 @@
             <div class="page-title">
                 <div class="row mb-4">
                     <div class="col-12 col-md-6 order-md-1 order-last">
-                        <h3>Material</h3>
+                        <h3>Kelola Users</h3>
                     </div>
 
                 </div>
@@ -45,20 +45,21 @@
                                     <!-- Form Search + Sorting -->
                                     <div class="d-flex mt-3 flex-column flex-md-row justify-content-between align-items-md-center px-5 pt-3 gap-2">
                                         <!-- Form Search + Sorting -->
-                                        <form action="{{ route('materials') }}" method="GET"
+                                        <form action="{{ route('users') }}" method="GET"
                                             class="d-flex flex-wrap flex-md-nowrap w-100 gap-2">
                                             <input type="text" name="search" class="form-control"
-                                                placeholder="Cari pengeluaran..."
+                                                placeholder="Cari user..."
                                                 value="{{ request('search') }}">
 
                                             <!-- Kolom Sort -->
                                             <select name="sort" class="form-select">
                                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
-                                                <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
-                                                <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
+                                                <option value="username" {{ request('sort') == 'username' ? 'selected' : '' }}>Username</option>
+                                                <option value="email" {{ request('sort') == 'email' ? 'selected' : '' }}>Email</option>
+                                                <option value="level_user" {{ request('sort') == 'level_user' ? 'selected' : '' }}>Jabatan</option>
                                             </select>
 
-                                            <!-- Order (Terkecil/Terbesar) -->
+                                            <!-- Order -->
                                             <select name="order" class="form-select">
                                                 <option value="asc" {{ request('order') == 'asc' ? 'selected' : '' }}>Terkecil → Terbesar</option>
                                                 <option value="desc" {{ request('order') == 'desc' ? 'selected' : '' }}>Terbesar → Terkecil</option>
@@ -71,7 +72,7 @@
                                             </button>
 
                                             @if(request('search') || request('sort') || request('order'))
-                                            <a href="{{ route('materials') }}"
+                                            <a href="{{ route('users') }}"
                                                 class="btn btn-secondary d-flex align-items-center justify-content-center w-md-auto"
                                                 style="height: 45px;">
                                                 <i class="bi mb-2 bi-x"></i> Reset
@@ -79,15 +80,16 @@
                                             @endif
                                         </form>
 
+
                                         <!-- Tombol Tambah (Kanan) -->
                                         @auth
                                         @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                        <button type="button"
+                                        <!-- <button type="button"
                                             class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
                                             style=" height: 45px;" data-bs-toggle="modal"
                                             data-bs-target="#tambah">
                                             <i class="bi bi-plus mb-2 me-1"></i>Tambah
-                                        </button>
+                                        </button> -->
                                         @endif
                                         @endauth
                                     </div>
@@ -95,17 +97,13 @@
 
                                     <!-- table hover -->
                                     <div class="table-responsive px-5 pt-4 pb-5">
-                                        @auth
-                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>
                                                     <th>NO</th>
-                                                    <th>PLANT</th>
-                                                    <th>KODE MATERIAL</th>
-                                                    <th>URAIAN MATERIAL</th>
-                                                    <th>TOTAL SALDO</th>
-                                                    <th>SATUAN</th>
+                                                    <th>USERNAME</th>
+                                                    <th>EMAIL</th>
+                                                    <th>JABATAN</th>
                                                     <th>AKSI</th>
                                                 </tr>
                                             </thead>
@@ -113,41 +111,34 @@
                                                 @forelse ($materials as $index => $material)
                                                 <tr>
                                                     <td>{{ $materials->firstItem() + $index }}</td>
-                                                    <td>{{ $material->plant }}</td>
-                                                    <td>{{ $material->kode_material }}</td>
-                                                    <td class="text-bold-500">{{ $material->uraian_material }}</td>
-                                                    <td>{{ $material->total_saldo }}</td>
-                                                    <td class="text-bold-500">{{ $material->satuan }}</td>
+                                                    <td>{{ $material->username }}</td>
+                                                    <td>{{ $material->email }}</td>
+                                                    <td>{{ $material->level_user }}</td>
                                                     <td>
                                                         <div class="btn-group" role="group">
                                                             <!-- Tombol Edit -->
-                                                            <!-- Tombol Edit Material -->
                                                             <button
                                                                 type="button"
-                                                                title="Edit"
-                                                                style="border-radius: 50%;"
-                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 rounded-circle text-white"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#editModal"
                                                                 data-id="{{ $material->id }}"
-                                                                data-plant="{{ $material->plant }}"
-                                                                data-kode="{{ $material->kode_material }}"
-                                                                data-uraian="{{ $material->uraian_material }}"
-                                                                data-satuan="{{ $material->satuan }}">
+                                                                data-username="{{ $material->username }}"
+                                                                data-email="{{ $material->email }}"
+                                                                data-level_user="{{ $material->level_user }}">
                                                                 <i class="bi bi-pencil"></i>
                                                             </button>
 
-
                                                             <!-- Tombol Hapus -->
-                                                            <form id="delete-form-{{ $material->id }}" action="{{ route('material.destroy', $material->id) }}" method="POST" class="d-inline">
+                                                            <form id="delete-form-{{ $material->id }}" action="{{ route('users.destroy', $material->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                                                <!-- <button type="button" class="btn btn-sm btn-danger rounded-circle"
                                                                     title="Hapus"
                                                                     data-id="{{ $material->id }}"
                                                                     onclick="confirmDelete(this)">
                                                                     <i class="bi bi-trash"></i>
-                                                                </button>
+                                                                </button> -->
 
                                                             </form>
 
@@ -163,52 +154,10 @@
                                                 @endforelse
                                             </tbody>
                                         </table>
-                                        <!-- Pagination -->
+                                        <!-- 📄 Pagination -->
                                         <div class="mt-3">
                                             {{ $materials->links('pagination::bootstrap-5') }}
                                         </div>
-                                        <!-- end pagination -->
-                                        @endif
-                                        @endauth
-
-                                        @auth
-                                        @if(Str::contains(Auth::user()->level_user, 'afdeling'))
-                                        <table class="table table-hover mb-0 text-center">
-                                            <thead>
-                                                <tr>
-                                                    <th>NO</th>
-                                                    <th>PLANT</th>
-                                                    <th>KODE MATERIAL</th>
-                                                    <th>URAIAN MATERIAL</th>
-                                                    <th>TOTAL SALDO</th>
-                                                    <th>SATUAN</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse ($materials as $index => $material)
-                                                <tr>
-                                                    <td>{{ $materials->firstItem() + $index }}</td>
-                                                    <td>{{ $material->plant }}</td>
-                                                    <td>{{ $material->kode_material }}</td>
-                                                    <td class="text-bold-500">{{ $material->uraian_material }}</td>
-                                                    <td>{{ $material->total_saldo }}</td>
-                                                    <td class="text-bold-500">{{ $material->satuan }}</td>
-                                                </tr>
-                                                @empty
-                                                <tr>
-                                                    <td colspan="4">Tidak ada data material</td>
-                                                </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                        <!-- Pagination -->
-                                        <div class="mt-3">
-                                            {{ $materials->links('pagination::bootstrap-5') }}
-                                        </div>
-                                        <!-- end pagination -->
-                                        @endif
-                                        @endauth
-
 
 
                                     </div>
@@ -282,14 +231,12 @@
     </div>
     <!-- End Modal Tambah Material -->
 
-
-
     <!-- Modal Edit Material -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title text-white" id="editLabel">Edit Material</h5>
+                    <h5 class="modal-title text-white" id="editLabel">Ganti Jabatan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -300,19 +247,28 @@
                         <input type="hidden" id="edit_id" name="id">
 
                         <div class="mb-3">
-                            <label for="edit_plant" class="form-label">Kode plant</label>
-                            <input type="text" class="form-control" id="edit_plant" name="plant">
+                            <label for="edit_username" class="form-label">Username</label>
+                            <input type="text" disabled class="form-control" id="edit_username" name="username">
                         </div>
 
                         <div class="mb-3">
-                            <label for="edit_kode_material" class="form-label">Kode Material</label>
-                            <input type="text" class="form-control" id="edit_kode_material" name="kode_material">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="text" disabled class="form-control" id="edit_email" name="email">
                         </div>
 
                         <div class="mb-3">
-                            <label for="edit_uraian_material" class="form-label">Uraian Material</label>
-                            <input type="text" class="form-control" id="edit_uraian_material" name="uraian_material">
+                            <label for="edit_level-user" class="form-label">Jabatan</label>
+                            <select class="form-select" id="edit_level-user" name="level_user">
+                                <option value="">-- Pilih Jabatan --</option>
+                                <option value="administrator">Administrator</option>
+                                <option value="administrasi">Administrasi</option>
+                                <option value="afdeling 01">Afdeling 01</option>
+                                <option value="afdeling 02">Afdeling 02</option>
+                                <option value="afdeling 03">Afdeling 03</option>
+                                <option value="afdeling 04">Afdeling 04</option>
+                            </select>
                         </div>
+
 
                     </div>
 
@@ -328,8 +284,6 @@
             </div>
         </div>
     </div>
-
-
 
 </x-layout>
 
@@ -372,18 +326,18 @@
             button.addEventListener('click', function() {
                 // Ambil data dari atribut tombol
                 const id = this.getAttribute('data-id');
-                const kode = this.getAttribute('data-kode');
-                const plant = this.getAttribute('data-plant');
-                const uraian = this.getAttribute('data-uraian');
+                const username = this.getAttribute('data-username');
+                const email = this.getAttribute('data-email');
+                const levelUser = this.getAttribute('data-level_user');
 
                 // Isi form di modal
                 document.getElementById('edit_id').value = id;
-                document.getElementById('edit_kode_material').value = kode;
-                document.getElementById('edit_plant').value = plant;
-                document.getElementById('edit_uraian_material').value = uraian;
+                document.getElementById('edit_username').value = username;
+                document.getElementById('edit_email').value = email;
+                document.getElementById('edit_level-user').value = levelUser;
 
                 // Ganti action form sesuai id
-                document.getElementById('editForm').action = "/material/" + id;
+                document.getElementById('editForm').action = "/users/" + id;
             });
         });
     });

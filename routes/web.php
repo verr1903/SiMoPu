@@ -6,12 +6,16 @@ use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\KelolaUserController;
+use Database\Factories\PengeluaranFactory;
 
 Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('isGuest');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/register', [AuthController::class, 'register'])->name('register.process');
+
+// rute scan cetak
+Route::get('/realisasi/scan/{id}', [PengeluaranController::class, 'scanUpdate'])->name('realisasi.scan');
 
 
 Route::middleware(['auth'])->group(function () {
@@ -20,6 +24,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
     Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');
+
+    Route::get('/users', [KelolaUserController::class, 'index'])->name('users');
+    Route::put('/users/{id}', [KelolaUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [KelolaUserController::class, 'destroy'])->name('users.destroy');
 
 
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
