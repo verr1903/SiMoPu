@@ -123,6 +123,7 @@
                                                     <th>SCAN KELUAR</th>
                                                     <th>SCAN SELESAI</th>
                                                     <th>PRINT</th>
+                                                    <th>AKSI</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -138,6 +139,7 @@
                                                     <!-- Detail -->
                                                     <td>
                                                         <button class="btn btn-sm btn-info btn-detail text-white"
+                                                            data-au58="{{ $realisasi->pengeluaran->au58 }}"
                                                             data-level="{{ $realisasi->pengeluaran->user->level_user }}"
                                                             data-username="{{ $realisasi->pengeluaran->user->username }}"
                                                             data-sumber="{{ is_array($realisasi->pengeluaran->sumber) ? implode(', ', $realisasi->pengeluaran->sumber) : $realisasi->pengeluaran->sumber }}"
@@ -155,16 +157,15 @@
                                                     <!-- Scan keluar -->
                                                     <td>
                                                         {{ $realisasi->scan_keluar 
-        ? \Carbon\Carbon::parse($realisasi->scan_keluar)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') 
-        : '-' }}
+                                                            ? \Carbon\Carbon::parse($realisasi->scan_keluar)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') : '-' 
+                                                        }}
                                                     </td>
-
 
                                                     <!-- Scan selesai -->
                                                     <td>
                                                         {{ $realisasi->scan_akhir 
-        ? \Carbon\Carbon::parse($realisasi->scan_akhir)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') 
-        : '-' }}
+                                                            ? \Carbon\Carbon::parse($realisasi->scan_akhir)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') : '-' 
+                                                            }}
                                                     </td>
                                                     <!-- Print -->
                                                     <td>
@@ -172,10 +173,36 @@
                                                             <i class="bi bi-printer"></i> Print
                                                         </a>
                                                     </td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <!-- Tombol Edit -->
+                                                            <button
+                                                                type="button"
+                                                                title="Edit"
+                                                                style="border-radius: 50%;"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editRealisasiModal"
+                                                                data-id="{{ $realisasi->id }}"
+                                                                data-cicilan="{{ $realisasi->cicilan_pengeluaran }}">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+
+                                                            <!-- Tombol Hapus -->
+                                                            <form id="delete-form-{{ $realisasi->id }}" action="{{ route('realisasiPengeluaran.destroy', $realisasi->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="btn btn-sm btn-danger rounded-circle" title="Hapus" data-id="{{ $realisasi->id }}" onclick="confirmDelete(this)">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="6">Tidak ada data pengeluaran</td>
+                                                    <td colspan="10">Tidak ada data pengeluaran</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
@@ -279,6 +306,7 @@
                     </div>
                     <div class="modal-body">
                         <ul class="list-group">
+                            <li class="list-group-item"><strong>Au 58:</strong> <span id="detailau58"></span></li>
                             <li class="list-group-item"><strong>Nama Pupuk:</strong> <span id="detailUraian"></span></li>
                             <li class="list-group-item"><strong>Kode Material:</strong> <span id="detailMaterial"></span></li>
                             <li class="list-group-item"><strong>Nama Pengaju:</strong> <span id="detailUsername"></span></li>
@@ -300,6 +328,39 @@
         </div>
         <!-- End Modal Detail -->
 
+        <!-- Modal Edit Realisasi -->
+        <div class="modal fade text-left" id="editRealisasiModal" tabindex="-1" role="dialog" aria-labelledby="editRealisasiLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title" id="editRealisasiLabel">Edit Realisasi Pengeluaran</h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="editRealisasiForm" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" id="edit_id" name="id">
+
+                            <div class="mb-3">
+                                <label for="edit_cicilan_pengeluaran" class="form-label">Cicilan Pengeluaran</label>
+                                <input type="number" min="1" class="form-control" name="cicilan_pengeluaran" id="edit_cicilan_pengeluaran" required>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                                    <i class="bi bi-x"></i> Keluar
+                                </button>
+                                <button type="button" class="btn btn-primary mt-2" onclick="confirmEdit()">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
 
     </x-layout>
 
@@ -320,6 +381,7 @@
 
             detailButtons.forEach(button => {
                 button.addEventListener("click", function() {
+                    document.getElementById("detailau58").textContent = this.dataset.au58;
                     document.getElementById("detailLevel").textContent = this.dataset.level;
                     document.getElementById("detailUsername").textContent = this.dataset.username;
                     document.getElementById("detailSumber").textContent = this.dataset.sumber;
@@ -360,4 +422,59 @@
             const tambahModal = document.getElementById('tambah');
             tambahModal.addEventListener('shown.bs.modal', checkSaldo);
         });
+    </script>
+
+    <!-- script modal edit -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const editButtons = document.querySelectorAll(".btn-edit");
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Ambil data dari atribut tombol
+                    const id = this.getAttribute('data-id');
+                    const cicilan = this.getAttribute('data-cicilan');
+
+                    // Isi form di modal
+                    document.getElementById('edit_id').value = id;
+                    document.getElementById('edit_cicilan_pengeluaran').value = cicilan;
+
+                    document.getElementById('editRealisasiForm').action = "/realisasi-pengeluaran/" + id;
+                });
+            });
+        });
+
+        function confirmEdit() {
+            Swal.fire({
+                title: 'Simpan perubahan?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('editRealisasiForm').submit();
+                }
+            });
+        }
+    </script>
+
+
+    <!-- konfirmasi hapus -->
+    <script>
+        function confirmDelete(button) {
+            Swal.fire({
+                title: 'Apakah yakin ingin menghapus?',
+                text: "Data yang dihapus tidak bisa dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    button.closest('form').submit();
+                }
+            });
+        }
     </script>

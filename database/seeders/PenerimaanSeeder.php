@@ -13,28 +13,40 @@ class PenerimaanSeeder extends Seeder
      */
     public function run(): void
     {
-        $records = [];
-        $suppliers = ['Supplier A', 'Supplier B', 'Supplier C'];
+        $suppliers = ['CV A', 'CV B', 'CV C'];
 
-        for ($i = 0; $i < 100; $i++) {
-            $randomDate = Carbon::now()
-                ->subYears(2)
-                ->addDays(rand(0, 730)); // 2 tahun ke belakang
+        $records = [
+            ['material_id' => 1, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+            ['material_id' => 2, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+            ['material_id' => 3, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 200],
+            ['material_id' => 4, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 700],
+            ['material_id' => 5, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 900],
+            ['material_id' => 6, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 850],
+            ['material_id' => 1, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 800],
+            ['material_id' => 2, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 700],
+            ['material_id' => 3, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 700],
+            ['material_id' => 4, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+            ['material_id' => 5, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 800],
+            ['material_id' => 6, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 550],
+            ['material_id' => 1, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 750],
+            ['material_id' => 2, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 850],
+            ['material_id' => 3, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+            ['material_id' => 4, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 650],
+            ['material_id' => 5, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 750],
+            ['material_id' => 6, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+            ['material_id' => 1, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 550],
+            ['material_id' => 2, 'tanggal_terima' => Carbon::create(rand(2024,2025), rand(1,12), rand(1,28))->format('Y-m-d'), 'saldo_masuk' => 950],
+        ];
 
-            // saldo masuk minimal lebih banyak dari keluar
-            $saldoKeluar = rand(1, 20); // perkiraan keluar
-            $saldoMasuk  = $saldoKeluar + rand(70, 250); // lebih besar dari keluar
-
-            $records[] = [
-                'material_id'    => rand(1, 6),
-                'tanggal_terima' => $randomDate->format('Y-m-d'),
-                'saldo_masuk'    => $saldoMasuk,
+        foreach ($records as $record) {
+            DB::table('penerimaans')->insert([
+                'material_id'    => $record['material_id'],
+                'tanggal_terima' => $record['tanggal_terima'],
+                'saldo_masuk'    => $record['saldo_masuk'],
                 'sumber'         => $suppliers[array_rand($suppliers)],
                 'created_at'     => now(),
                 'updated_at'     => now(),
-            ];
+            ]);
         }
-
-        DB::table('penerimaans')->insert($records);
     }
 }

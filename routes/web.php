@@ -28,6 +28,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
     Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');
+    Route::put('/realisasi-pengeluaran/{id}', [PengeluaranController::class, 'updateRealisasi'])->name('realisasiPengeluaran.update');
+    Route::delete('/realisasiPengeluaran/{id}', [PengeluaranController::class, 'destroyRealisasi'])->name('realisasiPengeluaran.destroy');
+
 
     Route::get('/users', [KelolaUserController::class, 'index'])->name('users');
     Route::put('/users/{id}', [KelolaUserController::class, 'update'])->name('users.update');
@@ -39,7 +42,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Update data profile
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update')->middleware('auth');
-
 
 
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');

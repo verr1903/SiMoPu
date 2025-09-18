@@ -121,6 +121,7 @@
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
+                                                    <th>AU 58</th>
                                                     <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
                                                     <th>SALDO KELUAR</th>
@@ -132,6 +133,7 @@
                                             <tbody>
                                                 @forelse ($Pengeluarans as $item)
                                                 <tr>
+                                                    <td>{{ $item->au58 }}</td>
                                                     <td>{{ $item->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
@@ -143,6 +145,7 @@
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="status" value="diterima">
+                                                            <input type="hidden" name="penerima" value="{{ auth()->id() }}">
                                                             <button type="submit" class="btn btn-success btn-sm mb-1" style="min-width: 100px;">
                                                                 <i class="bi bi-check-circle"></i> Terima
                                                             </button>
@@ -151,6 +154,7 @@
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="status" value="ditolak">
+                                                            <input type="hidden" name="penerima" value="{{ auth()->id() }}">
                                                             <button type="submit" class="btn btn-danger btn-sm mb-1" style="min-width: 100px;">
                                                                 <i class="bi bi-x-circle"></i> Tolak
                                                             </button>
@@ -186,6 +190,7 @@
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
+                                                    <th>AU 58</th>
                                                     <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
                                                     <th>SALDO KELUAR</th>
@@ -196,6 +201,7 @@
                                             <tbody>
                                                 @forelse ($PengeluaransDiterima as $item)
                                                 <tr>
+                                                    <td>{{ $item->au58 }}</td>
                                                     <td>{{ $item->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
@@ -292,6 +298,16 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="au58" class="form-label">Au 58</label>
+                            <input type="text" class="form-control @error('au58') is-invalid @enderror"
+                                name="au58" id="au58" value="{{ old('au58') }}" placeholder="Contoh: INV/2025/09/001" required>
+                            @error('au58')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+
+                        <div class="mb-3">
                             <label for="sumber" class="form-label">Kode Blok</label>
                             <div id="sumber-container">
                                 <div class="input-group mb-2 sumber-input">
@@ -346,26 +362,25 @@
 <!-- script tambah input blok -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('sumber-container');
-    const addBtn = document.getElementById('add-sumber');
+        const container = document.getElementById('sumber-container');
+        const addBtn = document.getElementById('add-sumber');
 
-    addBtn.addEventListener('click', function() {
-        const firstInputGroup = container.querySelector('.sumber-input');
-        const clone = firstInputGroup.cloneNode(true);
+        addBtn.addEventListener('click', function() {
+            const firstInputGroup = container.querySelector('.sumber-input');
+            const clone = firstInputGroup.cloneNode(true);
 
-        // Reset value
-        clone.querySelector('select').value = '';
-        clone.querySelector('.remove-sumber').classList.remove('d-none');
+            // Reset value
+            clone.querySelector('select').value = '';
+            clone.querySelector('.remove-sumber').classList.remove('d-none');
 
-        container.appendChild(clone);
+            container.appendChild(clone);
+        });
+
+        // Event delegation untuk remove
+        container.addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('remove-sumber')) {
+                e.target.closest('.sumber-input').remove();
+            }
+        });
     });
-
-    // Event delegation untuk remove
-    container.addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('remove-sumber')) {
-            e.target.closest('.sumber-input').remove();
-        }
-    });
-});
-
 </script>

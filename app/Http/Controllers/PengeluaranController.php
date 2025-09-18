@@ -100,6 +100,7 @@ class PengeluaranController extends Controller
             'material_id'    => 'required|exists:materials,id',
             'tanggal_keluar' => 'required|date',
             'saldo_keluar'   => 'required|integer|min:1',
+            'au58'           => 'required|string|max:255',
             'sumber'   => ['required', 'array', 'min:1'],
             'sumber.*' => ['string', 'regex:/^[0-9]+[A-Z]$/'],
             'status'         => 'nullable|string|max:50',
@@ -114,6 +115,7 @@ class PengeluaranController extends Controller
             'user_id'        => $request->session()->get('id'), // ambil dari session
             'material_id'    => $request->material_id,
             'tanggal_keluar' => $request->tanggal_keluar,
+            'au58'           => $request->au58,
             'saldo_keluar'   => $request->saldo_keluar,
             'saldo_sisa'     => $request->saldo_keluar,
             'sumber'         => $request->sumber,
@@ -145,9 +147,12 @@ class PengeluaranController extends Controller
             return back()->with('error', 'Status sudah tidak bisa diubah!');
         }
 
+        $penerimaId = $request->input('penerima', Auth::id());
+
         if ($request->status === 'ditolak') {
             $pengeluaran->update([
                 'status' => 'ditolak',
+                'penerima' => $penerimaId,
             ]);
 
             $blokList = implode(', ', (array) $pengeluaran->sumber);
@@ -178,7 +183,8 @@ class PengeluaranController extends Controller
 
             $pengeluaran->update([
                 'status' => 'diterima',
-                'qty_pengeluaran' => $request->input('pengeluaran_detail'), // array disimpan
+                'penerima' => $penerimaId,
+
             ]);
 
             $blokList = implode(', ', (array) $pengeluaran->sumber);
@@ -367,5 +373,47 @@ class PengeluaranController extends Controller
         }
 
         return view('admin.scanResult', compact('status', 'message'));
+    }
+
+    // Edit & Update Realisasi
+    public function updateRealisasi(Request $request, $id)
+    {
+        $realisasi = RealisasiPengeluaran::findOrFail($id);
+        $pengeluaran = Pengeluaran::findOrFail($realisasi->pengeluaran->id);
+        $request->validate([
+            'cicilan_pengeluaran' => 'required|integer|min:1',
+        ]);
+
+        // Hitung selisih antara cicilan baru dan lama
+        $selisih = $request->cicilan_pengeluaran - $realisasi->cicilan_pengeluaran;
+
+        // Cek apakah cicilan baru lebih besar dari saldo sisa
+        if ($selisih > $pengeluaran->saldo_sisa) {
+            return back()->with('error', 'Cicilan melebihi saldo sisa!');
+        }
+
+        // Update saldo_sisa di tabel pengeluaran
+        $pengeluaran->decrement('saldo_sisa', $selisih);
+
+        // Update cicilan_pengeluaran di tabel realisasi
+        $realisasi->update([
+            'cicilan_pengeluaran' => $request->cicilan_pengeluaran,
+        ]);
+
+        return redirect()->route('realisasiPengeluaran')->with('success', 'Realisasi berhasil diupdate!');
+    }
+
+    // Hapus Realisasi
+    public function destroyRealisasi($id)
+    {
+        $realisasi = RealisasiPengeluaran::findOrFail($id);
+        $pengeluaran = Pengeluaran::findOrFail($realisasi->pengeluaran->id);
+
+        // Kembalikan saldo_sisa
+        $pengeluaran->increment('saldo_sisa', $realisasi->cicilan_pengeluaran);
+
+        $realisasi->delete();
+
+        return redirect()->route('realisasiPengeluaran')->with('success', 'Realisasi berhasil dihapus!');
     }
 }

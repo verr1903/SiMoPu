@@ -8,12 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Pengeluaran extends Model
 {
 
-    protected $fillable = ['material_id', 'user_id', 'tanggal_keluar', 'saldo_keluar', 'saldo_sisa', 'sumber', 'status'];
+    protected $fillable = [
+        'material_id',
+        'user_id',
+        'penerima',
+        'au58',
+        'tanggal_keluar',
+        'saldo_keluar',
+        'saldo_sisa',
+        'sumber',
+        'status'
+    ];
 
     protected $casts = [
         'sumber' => 'array',
     ];
-    
+
     /**
      * Scope untuk urutkan data:
      * - Status menunggu → paling atas, urut dari yang lama
