@@ -7,6 +7,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KelolaUserController;
+use App\Http\Controllers\ProfileController;
 use Database\Factories\PengeluaranFactory;
 
 Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('isGuest');
@@ -18,8 +19,11 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.pr
 Route::get('/realisasi/scan/{id}', [PengeluaranController::class, 'scanUpdate'])->name('realisasi.scan');
 
 
+
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/chart-data/{year}', [DashboardController::class, 'getChartData']);
+
 
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
@@ -28,6 +32,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users', [KelolaUserController::class, 'index'])->name('users');
     Route::put('/users/{id}', [KelolaUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [KelolaUserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/users', [KelolaUserController::class, 'store'])->name('users.store');
+
+    // Tampilkan form profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->middleware('auth');
+
+    // Update data profile
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update')->middleware('auth');
+
 
 
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');

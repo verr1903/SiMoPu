@@ -121,9 +121,10 @@
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
-                                                    <th>KODE MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
                                                     <th>SALDO KELUAR</th>
+                                                    <th>AFDELING</th>
                                                     <th>BLOK</th>
                                                     <th>AKSI</th>
                                                 </tr>
@@ -131,17 +132,18 @@
                                             <tbody>
                                                 @forelse ($Pengeluarans as $item)
                                                 <tr>
-                                                    <td>{{ $item->material->kode_material }}</td>
+                                                    <td>{{ $item->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
-                                                    <td>{{ $item->sumber }}</td>
+                                                    <td>{{ $item->user->level_user ?? '-' }}</td>
+                                                    <td>{{ implode(', ', (array) $item->sumber) }}</td>
                                                     <td>
                                                         @if($item->status == 'menunggu')
                                                         <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="status" value="diterima">
-                                                            <button type="submit" class="btn btn-success btn-sm mb-1">
+                                                            <button type="submit" class="btn btn-success btn-sm mb-1" style="min-width: 100px;">
                                                                 <i class="bi bi-check-circle"></i> Terima
                                                             </button>
                                                         </form>
@@ -149,7 +151,7 @@
                                                             @csrf
                                                             @method('PATCH')
                                                             <input type="hidden" name="status" value="ditolak">
-                                                            <button type="submit" class="btn btn-danger btn-sm mb-1">
+                                                            <button type="submit" class="btn btn-danger btn-sm mb-1" style="min-width: 100px;">
                                                                 <i class="bi bi-x-circle"></i> Tolak
                                                             </button>
                                                         </form>
@@ -178,31 +180,45 @@
                                         @endif
                                         @endauth
 
-                                        {{-- 🔹 Tabel tanpa STATUS (hanya yang diterima) --}}
+                                        {{-- 🔹 Tabel tanpa STATUS AKSI --}}
                                         @auth
                                         @if(Str::contains(Auth::user()->level_user, 'afdeling'))
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
-                                                    <th>KODE MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
                                                     <th>SALDO KELUAR</th>
                                                     <th>BLOK</th>
+                                                    <th>STATUS</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @forelse ($PengeluaransDiterima as $item)
-                                                @if($item->status == 'diterima')
                                                 <tr>
-                                                    <td>{{ $item->material->kode_material }}</td>
+                                                    <td>{{ $item->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
-                                                    <td>{{ $item->sumber }}</td>
+                                                    <td>{{ implode(', ', (array) $item->sumber) }}</td>
+                                                    <td>
+                                                        @if($item->status == 'diterima')
+                                                        <button class="btn btn-success btn-sm disabled" style="pointer-events: none; min-width:120px;">
+                                                            <i class="bi bi-check-circle"></i> Diterima
+                                                        </button>
+                                                        @elseif($item->status == 'menunggu')
+                                                        <span class="btn btn-warning btn-sm disabled" style="pointer-events: none; min-width:120px;">
+                                                            <i class="bi bi-hourglass-split"></i> Menunggu
+                                                        </span>
+                                                        @elseif($item->status == 'ditolak')
+                                                        <span class="btn btn-danger btn-sm disabled" style="pointer-events: none; min-width:120px;">
+                                                            <i class="bi bi-x-circle"></i> Ditolak
+                                                        </span>
+                                                        @endif
+                                                    </td>
                                                 </tr>
-                                                @endif
                                                 @empty
                                                 <tr>
-                                                    <td colspan="4">Tidak ada data pengeluaran</td>
+                                                    <td colspan="5">Tidak ada data pengeluaran</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
@@ -277,12 +293,26 @@
 
                         <div class="mb-3">
                             <label for="sumber" class="form-label">Kode Blok</label>
-                            <input type="text" class="form-control @error('sumber') is-invalid @enderror"
-                                pattern="^([0-9]+[A-Z]+)(,\s*[0-9]+[A-Z]+)*$"  name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: 23K, 42L"  required>
+                            <div id="sumber-container">
+                                <div class="input-group mb-2 sumber-input">
+                                    <select name="sumber[]" class="form-select @error('sumber') is-invalid @enderror" required>
+                                        <option value="">-- Pilih Kode Blok --</option>
+                                        @foreach($blokUser as $blok)
+                                        <option value="{{ $blok }}">{{ $blok }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="btn btn-danger remove-sumber d-none">Hapus</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-sumber" class="btn btn-primary btn-sm mt-2">
+                                + Tambah Kode Blok
+                            </button>
                             @error('sumber')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
+
+
 
                         <!-- Footer -->
                         <div class="modal-footer">
@@ -312,3 +342,30 @@
     });
 </script>
 @endif
+
+<!-- script tambah input blok -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('sumber-container');
+    const addBtn = document.getElementById('add-sumber');
+
+    addBtn.addEventListener('click', function() {
+        const firstInputGroup = container.querySelector('.sumber-input');
+        const clone = firstInputGroup.cloneNode(true);
+
+        // Reset value
+        clone.querySelector('select').value = '';
+        clone.querySelector('.remove-sumber').classList.remove('d-none');
+
+        container.appendChild(clone);
+    });
+
+    // Event delegation untuk remove
+    container.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-sumber')) {
+            e.target.closest('.sumber-input').remove();
+        }
+    });
+});
+
+</script>

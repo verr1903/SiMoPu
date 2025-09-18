@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PenerimaanSeeder extends Seeder
 {
@@ -12,111 +13,28 @@ class PenerimaanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('penerimaans')->insert([
-            [
-                'material_id'   => 1,
-                'tanggal_terima'=> '2025-09-01',
-                'saldo_masuk'   => 100,
-                'sumber'        => 'Supplier A',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 2,
-                'tanggal_terima'=> '2025-09-02',
-                'saldo_masuk'   => 250,
-                'sumber'        => 'Supplier B',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 3,
-                'tanggal_terima'=> '2025-09-03',
-                'saldo_masuk'   => 150,
-                'sumber'        => 'Supplier A',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 4,
-                'tanggal_terima'=> '2025-09-04',
-                'saldo_masuk'   => 200,
-                'sumber'        => 'Supplier B',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 5,
-                'tanggal_terima'=> '2025-09-05',
-                'saldo_masuk'   => 300,
-                'sumber'        => 'Supplier A',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 3,
-                'tanggal_terima'=> '2025-09-06',
-                'saldo_masuk'   => 120,
-                'sumber'        => 'Supplier B',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 1,
-                'tanggal_terima'=> '2025-09-07',
-                'saldo_masuk'   => 180,
-                'sumber'        => 'Supplier C',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 2,
-                'tanggal_terima'=> '2025-09-08',
-                'saldo_masuk'   => 220,
-                'sumber'        => 'Supplier A',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 3,
-                'tanggal_terima'=> '2025-09-09',
-                'saldo_masuk'   => 140,
-                'sumber'        => 'Supplier B',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 4,
-                'tanggal_terima'=> '2025-09-10',
-                'saldo_masuk'   => 260,
-                'sumber'        => 'Supplier C',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 3,
-                'tanggal_terima'=> '2025-09-11',
-                'saldo_masuk'   => 310,
-                'sumber'        => 'Supplier A',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 2,
-                'tanggal_terima'=> '2025-09-12',
-                'saldo_masuk'   => 170,
-                'sumber'        => 'Supplier B',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-            [
-                'material_id'   => 6,
-                'tanggal_terima'=> '2025-09-13',
-                'saldo_masuk'   => 280,
-                'sumber'        => 'Supplier C',
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ],
-        ]);
+        $records = [];
+        $suppliers = ['Supplier A', 'Supplier B', 'Supplier C'];
+
+        for ($i = 0; $i < 100; $i++) {
+            $randomDate = Carbon::now()
+                ->subYears(2)
+                ->addDays(rand(0, 730)); // 2 tahun ke belakang
+
+            // saldo masuk minimal lebih banyak dari keluar
+            $saldoKeluar = rand(1, 20); // perkiraan keluar
+            $saldoMasuk  = $saldoKeluar + rand(70, 250); // lebih besar dari keluar
+
+            $records[] = [
+                'material_id'    => rand(1, 6),
+                'tanggal_terima' => $randomDate->format('Y-m-d'),
+                'saldo_masuk'    => $saldoMasuk,
+                'sumber'         => $suppliers[array_rand($suppliers)],
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ];
+        }
+
+        DB::table('penerimaans')->insert($records);
     }
 }

@@ -19,7 +19,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'sap' => 'required|string',
             'password' => 'required',
         ]);
 
@@ -29,6 +29,7 @@ class AuthController extends Controller
             $request->session()->put('id', Auth::user()->id);
             $request->session()->put('username', Auth::user()->username);
             $request->session()->put('level_user', Auth::user()->level_user);
+            $request->session()->put('kodeunit', Auth::user()->kodeunit);
 
             if ($request->has('remember')) {
                 cookie()->queue('remember_user', Auth::user()->id, 60 * 24 * 7);
@@ -37,37 +38,12 @@ class AuthController extends Controller
             return redirect()->intended('dashboard');
         }
 
-        return redirect()->route('login')->with('error', 'Login gagal! Email atau password salah.');
+        return redirect()->route('login')->with('error', 'Login gagal! Sap atau password salah.');
     }
 
     public function register(Request $request)
     {
-        try {
-            // Validasi input
-            $validated = $request->validate([
-                'username'   => 'required|string|max:255',
-                'email'      => 'required|email|unique:users,email',
-                'password'   => 'required|confirmed|min:6',
-                'level_user' => 'required|string|max:255',
-            ]);
-
-            // Simpan user baru
-            User::create([
-                'username'   => $validated['username'],
-                'email'      => $validated['email'],
-                'password'   => bcrypt($validated['password']),
-                'level_user' => $validated['level_user'],
-            ]);
-
-            // ✅ Setelah registrasi, redirect ke login + pesan success
-            return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // ✅ Kalau gagal validasi, tetap ke login tapi tab register terbuka
-            return redirect()->route('login')
-                ->withErrors($e->validator)
-                ->withInput()
-                ->with('showRegister', true);
-        }
+        
     }
 
 

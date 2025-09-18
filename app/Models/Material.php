@@ -24,4 +24,9 @@ class Material extends Model
     {
         return $this->hasMany(Pengeluaran::class, 'material_id');
     }
+    public function unit()
+    {
+        // belongsTo(Related, foreignKeyOnMaterials, ownerKeyOnUnits)
+        return $this->belongsTo(Unit::class, 'plant', 'kodeunit');
+    }
 }

@@ -9,15 +9,17 @@ use App\Models\Material;
 use App\Models\Notification;
 use App\Models\RealisasiPengeluaran;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class PengeluaranController extends Controller
 {
     public function index(Request $request)
     {
         // Query dasar
-        $query = Pengeluaran::with('material');
+        $query = Pengeluaran::with(['material', 'user']);
 
         // 🔍 Search
         if ($request->has('search') && $request->search != '') {
@@ -28,6 +30,26 @@ class PengeluaranController extends Controller
                 ->orWhere('saldo_keluar', 'like', '%' . $request->search . '%')
                 ->orWhere('sumber', 'like', '%' . $request->search . '%');
         }
+        $user = Auth::user();
+
+        $blok = [
+            'AFD01' => ['9G', '11G', '13G', '15G', '17G', '19G', '21G', '9H', '11H', '13H', '15H', '17H', '19H', '21H', '9I', '11I', '13I', '15I', '17I', '19I', '21I', '9J', '11J', '13J', '15J', '17J', '19J', '21J'],
+            'AFD02' => ['9L', '11L', '13L', '15L', '9M', '10O', '12O', '14O', '16O', '18O', '20O', '22O', '24O', '6P', '8P', '10P', '12P', '14P', '16P', '18P', '20P', '22P', '24P', '26P', '28P'],
+            'AFD03' => ['14L', '14M', '16M', '18M', '20M', '22M', '12N', '12N1', '14N', '16N', '18N', '20N', '22N', '24N', '26N', '28N', '30N', '24O1', '26O', '28O', '30O', '36O', '26P1', '28P1', '30P', '36P', '38P', '40P'],
+            'AFD04' => ['14I', '14I1', '16I', '16I1', '18I', '18J', '20J', '22J', '24J', '12K', '14K', '16K', '18K', '20K', '22K', '24K', '26K', '16L', '18L', '20L', '22L', '24L', '26L', '28L', '16M1', '18M1', '20M1', '22M1', '24M', '26M', '28M', '30M', '26N1', '28N1', '30N1', '1BT'],
+        ];
+
+        $blokUser = [];
+
+        if (Str::contains($user->level_user, 'afdeling')) {
+            // Ambil bagian '04' lalu tambahkan prefix 'AFD'
+            preg_match('/\d+$/', $user->level_user, $matches); // ambil angka di akhir
+            $afd = 'AFD' . ($matches[0] ?? '');
+            $blokUser = $blok[$afd] ?? [];
+        } else {
+            $blokUser = array_merge(...array_values($blok));
+        }
+
 
         // 🔄 Urutkan: status "menunggu" paling atas, lalu by created_at desc
         $query->orderByRaw("
@@ -54,10 +76,11 @@ class PengeluaranController extends Controller
             ->withQueryString();
 
         // 📄 Pagination tabel 2 (hanya diterima)
-        $PengeluaransDiterima = Pengeluaran::with('material')
-            ->where('status', 'diterima')
+        $PengeluaransDiterima = Pengeluaran::with(['material', 'user'])
+            ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->paginate(10, ['*'], 'tabel2')->withQueryString();
+            ->paginate(10, ['*'], 'tabel2')
+            ->withQueryString();
 
         $materials = Material::orderBy('created_at', 'desc')->get();
 
@@ -66,6 +89,7 @@ class PengeluaranController extends Controller
             'Pengeluarans'         => $Pengeluarans,
             'PengeluaransDiterima' => $PengeluaransDiterima,
             'materials'            => $materials,
+            'blokUser'             => $blokUser,
         ]);
     }
 
@@ -76,7 +100,8 @@ class PengeluaranController extends Controller
             'material_id'    => 'required|exists:materials,id',
             'tanggal_keluar' => 'required|date',
             'saldo_keluar'   => 'required|integer|min:1',
-            'sumber' => ['required', 'string', 'max:255', 'regex:/^([0-9]+[A-Z]+)([\s,]+[0-9]+[A-Z]+)*$/'],
+            'sumber'   => ['required', 'array', 'min:1'],
+            'sumber.*' => ['string', 'regex:/^[0-9]+[A-Z]$/'],
             'status'         => 'nullable|string|max:50',
         ]);
 
@@ -125,12 +150,15 @@ class PengeluaranController extends Controller
                 'status' => 'ditolak',
             ]);
 
+            $blokList = implode(', ', (array) $pengeluaran->sumber);
+
+
             $message = <<<MSG
                         Pengajuan Pengeluaran Ditolak
                         Kode Material : {$pengeluaran->material->kode_material}, 
                         Tanggal Keluar: {$pengeluaran->tanggal_keluar}, 
                         Saldo Keluar  : {$pengeluaran->saldo_keluar}, 
-                        Blok          : {$pengeluaran->sumber}
+                        Blok          : {$blokList}
                         MSG;
 
             Notification::create([
@@ -153,12 +181,15 @@ class PengeluaranController extends Controller
                 'qty_pengeluaran' => $request->input('pengeluaran_detail'), // array disimpan
             ]);
 
+            $blokList = implode(', ', (array) $pengeluaran->sumber);
+
+
             $message = <<<MSG
                         Pengajuan Pengeluaran Diterima
                         Kode Material : {$pengeluaran->material->kode_material},
                         Tanggal Keluar: {$pengeluaran->tanggal_keluar},
                         Saldo Keluar  : {$pengeluaran->saldo_keluar},
-                        Blok        : {$pengeluaran->sumber}
+                        Blok        : {$blokList}
                         MSG;
 
             Notification::create([
@@ -193,7 +224,7 @@ class PengeluaranController extends Controller
                     })
                     // Cari di pengeluaran
                     ->orWhereHas('pengeluaran', function ($q) use ($search) {
-                        $q->where('sumber', 'like', "%{$search}%")
+                        $q->whereJsonContains('sumber', $search) // ✅ array-safe
                             ->orWhereDate('tanggal_keluar', 'like', "%{$search}%");
                     })
                     // Cari di tabel realisasi_pengeluaran sendiri
@@ -207,8 +238,12 @@ class PengeluaranController extends Controller
         $sort  = $request->get('sort', 'created_at');
         $order = $request->get('order', 'desc');
 
-        if (in_array($sort, ['created_at', 'tanggal_keluar', 'sumber'])) {
+        if (in_array($sort, ['created_at', 'tanggal_keluar'])) {
             $query->orderBy($sort, $order);
+        } elseif ($sort === 'sumber') {
+            $query->join('pengeluarans', 'realisasi_pengeluarans.pengeluaran_id', '=', 'pengeluarans.id')
+                ->orderBy('pengeluarans.sumber', $order)
+                ->select('realisasi_pengeluarans.*');
         } elseif ($sort === 'kode_material') {
             $query->join('pengeluarans', 'realisasi_pengeluarans.pengeluaran_id', '=', 'pengeluarans.id')
                 ->join('materials', 'pengeluarans.material_id', '=', 'materials.id')
@@ -217,6 +252,7 @@ class PengeluaranController extends Controller
         } elseif ($sort === 'qty') {
             $query->orderBy('cicilan_pengeluaran', $order);
         }
+
 
         // ✅ Ambil data
         $realisasiPengeluarans = $query->paginate(10)->appends($request->all());
@@ -266,7 +302,8 @@ class PengeluaranController extends Controller
     public function printRealisasi($id)
     {
         $realisasi = RealisasiPengeluaran::with(['pengeluaran.material', 'pengeluaran.user'])->findOrFail($id);
-
+        $materials = Material::all();
+        $users     = User::all();
         // Ubah tanggal ke format Indonesia
         $tanggalKeluar = Carbon::parse($realisasi->pengeluaran->tanggal_keluar)
             ->translatedFormat('d M Y');
@@ -295,49 +332,40 @@ class PengeluaranController extends Controller
             ->merge(storage_path('app/public/logo/logoqr.png'), 0.4, true)
             ->generate($qrData, $path);
 
-        return view('admin.printRealisasi', compact('realisasi', 'fileName'));
+        return view('admin.printRealisasi', [
+            'title'     => 'Detail Realisasi',
+            'realisasi' => $realisasi,
+            'materials' => $materials,
+            'users'     => $users,
+            'fileName'  => $fileName,
+        ]);
     }
 
     public function scanUpdate($id)
     {
         $realisasi = RealisasiPengeluaran::findOrFail($id);
 
-        $now = \Carbon\Carbon::now('Asia/Jakarta');
+        $status = 'error';
+        $message = '';
 
         if (is_null($realisasi->scan_keluar)) {
-            // Scan pertama kali
-            $realisasi->update([
-                'scan_keluar' => $now,
-            ]);
+            $realisasi->update(['scan_keluar' => now()]);
+            $status = 'success';
+            $message = 'Scan keluar berhasil dicatat pada ' . now()->translatedFormat('d F Y H:i:s');
+        } elseif (is_null($realisasi->scan_akhir)) {
+            $scanKeluar = \Carbon\Carbon::parse($realisasi->scan_keluar);
 
-            return response()->json([
-                'message' => 'Scan keluar berhasil dicatat',
-                'time' => $now->translatedFormat('d F Y H:i:s'),
-            ]);
-        } else {
-            // Scan kedua atau lebih
-            if (is_null($realisasi->scan_akhir)) {
-                $scanKeluar = \Carbon\Carbon::parse($realisasi->scan_keluar);
-
-                if ($scanKeluar->diffInMinutes($now) >= 1) {
-                    $realisasi->update([
-                        'scan_akhir' => $now,
-                    ]);
-
-                    return response()->json([
-                        'message' => 'Scan akhir berhasil dicatat',
-                        'time' => $now->translatedFormat('d F Y H:i:s'),
-                    ]);
-                } else {
-                    return response()->json([
-                        'message' => 'Scan akhir hanya bisa dilakukan minimal 1 menit setelah scan keluar',
-                    ], 400);
-                }
+            if ($scanKeluar->diffInMinutes(now()) >= 1) {
+                $realisasi->update(['scan_akhir' => now()]);
+                $status = 'success';
+                $message = 'Scan akhir berhasil dicatat pada ' . now()->translatedFormat('d F Y H:i:s');
             } else {
-                return response()->json([
-                    'message' => 'QR ini sudah discan 2 kali (scan keluar & scan akhir sudah tercatat)',
-                ], 400);
+                $message = 'Scan akhir hanya bisa dilakukan minimal 1 menit setelah scan keluar';
             }
+        } else {
+            $message = 'QR ini sudah discan 2 kali (scan keluar & scan akhir sudah tercatat)';
         }
+
+        return view('admin.scanResult', compact('status', 'message'));
     }
 }

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             MaterialSeeder::class,
             PenerimaanSeeder::class,
             PengeluaranSeeder::class,
+            UnitSeeder::class,
         ]);
     }
 }

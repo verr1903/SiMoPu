@@ -76,7 +76,7 @@
             <form action="{{ route('login.process') }}" method="POST">
                 @csrf
                 <h1 class="mb-4">Masuk</h1>
-                <input type="email" name="email" class="form-control p-3" placeholder="Alamat Email" required />
+                <input type="text" name="sap" class="form-control p-3" placeholder="Kode SAP" required />
                 <input type="password" name="password" class="form-control p-3" placeholder="Kata Sandi" required />
                 <button class="btn btn-primary mt-4 py-2 px-5">Login</button>
             </form>
@@ -93,8 +93,8 @@
                 </div>
                 <div class="toggle-panel toggle-right">
                     <h1>Hallo</h1>
-                    <p>Buat akun Anda sekarang untuk menggunakan semua fitur</p>
-                    <button class="btn btn-outline-light mt-2" id="register">Daftar</button>
+                    <p>Selamat datang di Sistem SiMoPu, monitoring pupuk mudah.</p>
+                    <button class="btn btn-outline-light mt-2 d-none" id="register">Daftar</button>
                 </div>
             </div>
         </div>

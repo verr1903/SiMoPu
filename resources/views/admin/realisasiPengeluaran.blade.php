@@ -114,7 +114,10 @@
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
+                                                    <th>AFDELING</th>
+                                                    <th>BLOK</th>
                                                     <th>SALDO KELUAR</th>
                                                     <th>DETAIL</th>
                                                     <th>SCAN KELUAR</th>
@@ -125,7 +128,11 @@
                                             <tbody>
                                                 @forelse($realisasiPengeluarans as $realisasi)
                                                 <tr>
-                                                    <td>{{ \Carbon\Carbon::parse($realisasi->pengeluaran->tanggal_keluar)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ $realisasi->pengeluaran->material->uraian_material }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($realisasi->created_at)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ $realisasi->pengeluaran->user->level_user}}</td>
+                                                    <td>{{ is_array($realisasi->pengeluaran->sumber) ? implode(', ', $realisasi->pengeluaran->sumber) : $realisasi->pengeluaran->sumber }}</td>
+
                                                     <td>{{ $realisasi->cicilan_pengeluaran }} Kg</td>
 
                                                     <!-- Detail -->
@@ -133,12 +140,13 @@
                                                         <button class="btn btn-sm btn-info btn-detail text-white"
                                                             data-level="{{ $realisasi->pengeluaran->user->level_user }}"
                                                             data-username="{{ $realisasi->pengeluaran->user->username }}"
-                                                            data-sumber="{{ $realisasi->pengeluaran->sumber }}"
+                                                            data-sumber="{{ is_array($realisasi->pengeluaran->sumber) ? implode(', ', $realisasi->pengeluaran->sumber) : $realisasi->pengeluaran->sumber }}"
                                                             data-material="{{ $realisasi->pengeluaran->material->kode_material }}"
                                                             data-uraian="{{ $realisasi->pengeluaran->material->uraian_material }}"
                                                             data-total_saldo_keluar="{{ $realisasi->pengeluaran->saldo_keluar }}"
                                                             data-saldo_keluar="{{ $realisasi->cicilan_pengeluaran }}"
-                                                            data-tanggal="{{ \Carbon\Carbon::parse($realisasi->pengeluaran->tanggal_keluar)->translatedFormat('d F Y') }}"
+                                                            data-tanggal_permintaan="{{ \Carbon\Carbon::parse($realisasi->pengeluaran->tanggal_keluar)->translatedFormat('d F Y') }}"
+                                                            data-tanggal_keluar="{{ \Carbon\Carbon::parse($realisasi->created_at)->translatedFormat('d F Y') }}"
                                                             data-bs-toggle="modal" data-bs-target="#detailModal">
                                                             <i class="bi bi-eye"></i> Detail
                                                         </button>
@@ -146,14 +154,18 @@
 
                                                     <!-- Scan keluar -->
                                                     <td>
-    {{ $realisasi->scan_keluar 
+                                                        {{ $realisasi->scan_keluar 
         ? \Carbon\Carbon::parse($realisasi->scan_keluar)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') 
         : '-' }}
-</td>
+                                                    </td>
 
 
                                                     <!-- Scan selesai -->
-                                                   <td>{{ $realisasi->scan_akhir }}</td>
+                                                    <td>
+                                                        {{ $realisasi->scan_akhir 
+        ? \Carbon\Carbon::parse($realisasi->scan_akhir)->timezone('Asia/Jakarta')->translatedFormat('H:i:s, d M Y ') 
+        : '-' }}
+                                                    </td>
                                                     <!-- Print -->
                                                     <td>
                                                         <a href="{{ route('realisasi.print', $realisasi->id) }}" target="_blank" class="btn btn-sm btn-secondary">
@@ -218,7 +230,7 @@
                                         Total Saldo Keluar: {{ $pengeluaran->saldo_keluar }} Kg |
                                         Sisa Saldo Keluar: {{ $pengeluaran->saldo_sisa }} Kg |
                                         Dari: {{ $pengeluaran->user->level_user }} |
-                                        Untuk Blok: {{ $pengeluaran->sumber }}
+                                        Untuk Blok: {{ is_array($pengeluaran->sumber) ? implode(', ', $pengeluaran->sumber) : $pengeluaran->sumber }}
                                     </option>
 
                                     @endforeach
@@ -267,14 +279,15 @@
                     </div>
                     <div class="modal-body">
                         <ul class="list-group">
-                            <li class="list-group-item"><strong>Afdeling:</strong> <span id="detailLevel"></span></li>
-                            <li class="list-group-item"><strong>Nama Pengaju:</strong> <span id="detailUsername"></span></li>
-                            <li class="list-group-item"><strong>Blok:</strong> <span id="detailSumber"></span></li>
+                            <li class="list-group-item"><strong>Nama Pupuk:</strong> <span id="detailUraian"></span></li>
                             <li class="list-group-item"><strong>Kode Material:</strong> <span id="detailMaterial"></span></li>
-                            <li class="list-group-item"><strong>Uraian Material:</strong> <span id="detailUraian"></span></li>
-                            <li class="list-group-item"><strong>Saldo Keluar:</strong> <span id="detailSaldoKeluar"></span> Kg</li>
+                            <li class="list-group-item"><strong>Nama Pengaju:</strong> <span id="detailUsername"></span></li>
+                            <li class="list-group-item"><strong>Afdeling:</strong> <span id="detailLevel"></span></li>
+                            <li class="list-group-item"><strong>Blok:</strong> <span id="detailSumber"></span></li>
                             <li class="list-group-item"><strong>Total Saldo Keluar:</strong> <span id="detailTotalSaldoKeluar"></span> Kg</li>
-                            <li class="list-group-item"><strong>Tanggal Keluar:</strong> <span id="detailTanggal"></span></li>
+                            <li class="list-group-item"><strong>Saldo Keluar:</strong> <span id="detailSaldoKeluar"></span> Kg</li>
+                            <li class="list-group-item"><strong>Tanggal Permintaan Keluar:</strong> <span id="detailTanggalPermintaan"></span></li>
+                            <li class="list-group-item"><strong>Tanggal Keluar:</strong> <span id="detailTanggalKeluar"></span></li>
                         </ul>
                     </div>
                     <div class="modal-footer">
@@ -314,7 +327,8 @@
                     document.getElementById("detailUraian").textContent = this.dataset.uraian;
                     document.getElementById("detailTotalSaldoKeluar").textContent = this.dataset.total_saldo_keluar;
                     document.getElementById("detailSaldoKeluar").textContent = this.dataset.saldo_keluar;
-                    document.getElementById("detailTanggal").textContent = this.dataset.tanggal;
+                    document.getElementById("detailTanggalPermintaan").textContent = this.dataset.tanggal_permintaan;
+                    document.getElementById("detailTanggalKeluar").textContent = this.dataset.tanggal_keluar;
                 });
             });
         });

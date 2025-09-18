@@ -12,10 +12,14 @@ class User extends Authenticatable
 
     protected $fillable = [
         'username',
-        'email',
+        'sap',
         'password',
         'level_user',
+        'kodeunit',
     ];
 
-    
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'kodeunit', 'kodeunit');
+    }
 }

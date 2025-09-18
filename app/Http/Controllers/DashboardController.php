@@ -6,24 +6,107 @@ use Illuminate\Http\Request;
 use App\Models\Material;
 use App\Models\Penerimaan;
 use App\Models\Pengeluaran;
+use App\Models\Unit;
 use App\Models\RealisasiPengeluaran; // sesuaikan dengan nama model kamu
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Hitung total dari tiap tabel
         $totalMaterial    = Material::count();
         $totalPenerimaan  = Penerimaan::count();
         $totalPengeluaran = Pengeluaran::count();
         $totalRealisasi   = RealisasiPengeluaran::count();
 
+        // Tahun untuk filter
+        $years = Pengeluaran::selectRaw('YEAR(tanggal_keluar) as year')
+            ->union(Penerimaan::selectRaw('YEAR(tanggal_terima) as year'))
+            ->groupBy('year')
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        $selectedYear = $request->get('year', now()->year);
+
+        // --- Data Penerimaan & Pengeluaran per bulan ---
+        $pengeluaranPerBulan = Pengeluaran::selectRaw('MONTH(tanggal_keluar) as month, SUM(saldo_keluar) as total')
+            ->whereYear('tanggal_keluar', $selectedYear)
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $penerimaanPerBulan = Penerimaan::selectRaw('MONTH(tanggal_terima) as month, SUM(saldo_masuk) as total')
+            ->whereYear('tanggal_terima', $selectedYear)
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $pengeluaranData = [];
+        $penerimaanData  = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $pengeluaranData[] = $pengeluaranPerBulan[$i] ?? 0;
+            $penerimaanData[]  = $penerimaanPerBulan[$i] ?? 0;
+        }
+
+        // --- Grafik Stok Material ---
+        $stokMaterial = Material::select('uraian_material', 'total_saldo')->get();
+        $stokLabels = $stokMaterial->pluck('uraian_material');
+        $stokData   = $stokMaterial->pluck('total_saldo');
+
+        // --- Grafik Kecepatan Realisasi ---
+        $realisasi = RealisasiPengeluaran::selectRaw('DATE(scan_keluar) as tgl, 
+                    AVG(TIMESTAMPDIFF(MINUTE, scan_keluar, scan_akhir)) as rata_waktu')
+            ->whereNotNull('scan_keluar')
+            ->whereNotNull('scan_akhir')
+            ->groupBy('tgl')
+            ->orderBy('tgl')
+            ->get();
+
+        $realisasiLabels = $realisasi->pluck('tgl');
+        $realisasiData   = $realisasi->pluck('rata_waktu');
+        $units = Unit::all();
+
         return view('admin.index', [
-            'title'           => 'Dashboard',
-            'totalMaterial'   => $totalMaterial,
-            'totalPenerimaan' => $totalPenerimaan,
-            'totalPengeluaran'=> $totalPengeluaran,
-            'totalRealisasi'  => $totalRealisasi,
+            'title'            => 'Dashboard',
+            'totalMaterial'    => $totalMaterial,
+            'totalPenerimaan'  => $totalPenerimaan,
+            'totalPengeluaran' => $totalPengeluaran,
+            'totalRealisasi'   => $totalRealisasi,
+            'years'            => $years,
+            'selectedYear'     => $selectedYear,
+            'pengeluaranData'  => $pengeluaranData,
+            'penerimaanData'   => $penerimaanData,
+            'stokLabels'       => $stokLabels,
+            'stokData'         => $stokData,
+            'realisasiLabels'  => $realisasiLabels,
+            'realisasiData'    => $realisasiData,
+            'units'            => $units,
+        ]);
+    }
+
+
+    // API untuk chart AJAX
+    public function getChartData($year)
+    {
+        $pengeluaranPerBulan = Pengeluaran::selectRaw('MONTH(tanggal_keluar) as month, SUM(saldo_keluar) as total')
+            ->whereYear('tanggal_keluar', $year)
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $penerimaanPerBulan = Penerimaan::selectRaw('MONTH(tanggal_terima) as month, SUM(saldo_masuk) as total')
+            ->whereYear('tanggal_terima', $year)
+            ->groupBy('month')
+            ->pluck('total', 'month');
+
+        $pengeluaranData = [];
+        $penerimaanData  = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $pengeluaranData[] = $pengeluaranPerBulan[$i] ?? 0;
+            $penerimaanData[]  = $penerimaanPerBulan[$i] ?? 0;
+        }
+
+        return response()->json([
+            'pengeluaran' => $pengeluaranData,
+            'penerimaan'  => $penerimaanData,
         ]);
     }
 }

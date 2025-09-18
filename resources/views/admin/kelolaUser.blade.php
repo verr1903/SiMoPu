@@ -56,7 +56,7 @@
                                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
                                                 <option value="username" {{ request('sort') == 'username' ? 'selected' : '' }}>Username</option>
                                                 <option value="email" {{ request('sort') == 'email' ? 'selected' : '' }}>Email</option>
-                                                <option value="level_user" {{ request('sort') == 'level_user' ? 'selected' : '' }}>Jabatan</option>
+                                                <option value="level_user" {{ request('sort') == 'level_user' ? 'selected' : '' }}>LEVEL AKSES</option>
                                             </select>
 
                                             <!-- Order -->
@@ -83,13 +83,13 @@
 
                                         <!-- Tombol Tambah (Kanan) -->
                                         @auth
-                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
-                                        <!-- <button type="button"
+                                        @if(in_array(Auth::user()->level_user, ['administrator']))
+                                        <button type="button"
                                             class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
                                             style=" height: 45px;" data-bs-toggle="modal"
                                             data-bs-target="#tambah">
                                             <i class="bi bi-plus mb-2 me-1"></i>Tambah
-                                        </button> -->
+                                        </button>
                                         @endif
                                         @endauth
                                     </div>
@@ -101,9 +101,10 @@
                                             <thead>
                                                 <tr>
                                                     <th>NO</th>
+                                                    <th>SAP</th>
                                                     <th>USERNAME</th>
-                                                    <th>EMAIL</th>
-                                                    <th>JABATAN</th>
+                                                    <th>LEVEL AKSES</th>
+                                                    <th>UNIT ASAL</th>
                                                     <th>AKSI</th>
                                                 </tr>
                                             </thead>
@@ -111,9 +112,10 @@
                                                 @forelse ($materials as $index => $material)
                                                 <tr>
                                                     <td>{{ $materials->firstItem() + $index }}</td>
+                                                    <td>{{ $material->sap }}</td>
                                                     <td>{{ $material->username }}</td>
-                                                    <td>{{ $material->email }}</td>
                                                     <td>{{ $material->level_user }}</td>
+                                                    <td>{{ $material->kodeunit }} - {{ $material->unit->namaunit ?? '-' }}</td>
                                                     <td>
                                                         <div class="btn-group" role="group">
                                                             <!-- Tombol Edit -->
@@ -124,7 +126,8 @@
                                                                 data-bs-target="#editModal"
                                                                 data-id="{{ $material->id }}"
                                                                 data-username="{{ $material->username }}"
-                                                                data-email="{{ $material->email }}"
+                                                                data-sap="{{ $material->sap }}"
+                                                                data-unit="{{ $material->unit->kodeunit ?? '' }}"
                                                                 data-level_user="{{ $material->level_user }}">
                                                                 <i class="bi bi-pencil"></i>
                                                             </button>
@@ -171,44 +174,67 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Material -->
+    <!-- Modal Tambah User -->
     <div class="modal fade text-left" id="tambah" tabindex="-1" role="dialog" aria-labelledby="tambahLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <!-- Header -->
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title text-white" id="tambahLabel">Tambah Material</h5>
+                    <h5 class="modal-title text-white" id="tambahLabel">Tambah User</h5>
                     <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <!-- Body -->
                 <div class="modal-body">
-                    <form action="{{ route('material.store') }}" method="POST">
+                    <form action="{{ route('users.store') }}" method="POST">
                         @csrf
+
                         <div class="mb-3">
-                            <label for="plant" class="form-label">Kode Plant</label>
-                            <input type="text" class="form-control @error('plant') is-invalid @enderror"
-                                name="plant" id="plant" value="{{ old('plant') }}" placeholder="Contoh: 3E02" required>
-                            @error('plant')
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                name="username" id="username" value="{{ old('username') }}" placeholder="Masukkan username" required>
+                            @error('username')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label for="kode_material" class="form-label">Kode Material</label>
-                            <input type="text" class="form-control @error('kode_material') is-invalid @enderror"
-                                name="kode_material" id="kode_material" value="{{ old('kode_material') }}" placeholder="Contoh: 40005941" required>
-                            @error('kode_material')
+                            <label for="sap" class="form-label">SAP</label>
+                            <input type="text" class="form-control @error('sap') is-invalid @enderror"
+                                name="sap" id="sap" value="{{ old('sap') }}" placeholder="Masukkan SAP" required>
+                            @error('sap')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label for="uraian_material" class="form-label">Uraian Material</label>
-                            <input type="text" class="form-control @error('uraian_material') is-invalid @enderror"
-                                name="uraian_material" id="uraian_material" value="{{ old('uraian_material') }}" placeholder="Contoh: FERTILIZER:KCL (MOP);60% K2O;GRANUL" required>
-                            @error('uraian_material')
+                            <label for="level_user" class="form-label">LEVEL AKSES</label>
+                            <select class="form-select @error('level_user') is-invalid @enderror" id="level_user" name="level_user" required>
+                                <option value="">-- Pilih LEVEL AKSES --</option>
+                                <option value="administrator" {{ old('level_user') == 'administrator' ? 'selected' : '' }}>Administrator</option>
+                                <option value="administrasi" {{ old('level_user') == 'administrasi' ? 'selected' : '' }}>Administrasi</option>
+                                <option value="afdeling 01" {{ old('level_user') == 'afdeling 01' ? 'selected' : '' }}>Afdeling 01</option>
+                                <option value="afdeling 02" {{ old('level_user') == 'afdeling 02' ? 'selected' : '' }}>Afdeling 02</option>
+                                <option value="afdeling 03" {{ old('level_user') == 'afdeling 03' ? 'selected' : '' }}>Afdeling 03</option>
+                                <option value="afdeling 04" {{ old('level_user') == 'afdeling 04' ? 'selected' : '' }}>Afdeling 04</option>
+                            </select>
+                            @error('level_user')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="kodeunit" class="form-label">UNIT</label>
+                            <select class="form-select @error('kodeunit') is-invalid @enderror" id="kodeunit" name="kodeunit" required>
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach($units as $unit)
+                                <option value="{{ $unit->kodeunit }}" {{ old('kodeunit') == $unit->kodeunit ? 'selected' : '' }}>
+                                    {{ $unit->kodeunit }} - {{ $unit->namaunit }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('kodeunit')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -216,27 +242,26 @@
                         <!-- Footer -->
                         <div class="modal-footer">
                             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
-                                <i class="bi bi-x"></i> Keluar
+                                <i class="bi bi-x"></i> Batal
                             </button>
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check"></i> Simpan
                             </button>
                         </div>
                     </form>
-
                 </div>
 
             </div>
         </div>
     </div>
-    <!-- End Modal Tambah Material -->
+
 
     <!-- Modal Edit Material -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title text-white" id="editLabel">Ganti Jabatan</h5>
+                    <h5 class="modal-title text-white" id="editLabel">Ganti LEVEL AKSES</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -248,24 +273,35 @@
 
                         <div class="mb-3">
                             <label for="edit_username" class="form-label">Username</label>
-                            <input type="text" disabled class="form-control" id="edit_username" name="username">
+                            <input type="text" class="form-control" id="edit_username" name="username">
                         </div>
 
                         <div class="mb-3">
-                            <label for="edit_email" class="form-label">Email</label>
-                            <input type="text" disabled class="form-control" id="edit_email" name="email">
+                            <label for="edit_sap" class="form-label">SAP</label>
+                            <input type="text" class="form-control" id="edit_sap" name="sap">
                         </div>
 
+
                         <div class="mb-3">
-                            <label for="edit_level-user" class="form-label">Jabatan</label>
-                            <select class="form-select" id="edit_level-user" name="level_user">
-                                <option value="">-- Pilih Jabatan --</option>
+                            <label for="edit_level-user" class="form-label">LEVEL AKSES</label>
+                            <select class="form-select" id="edit_level_user" name="level_user">
+                                <option value="">-- Pilih LEVEL AKSES --</option>
                                 <option value="administrator">Administrator</option>
                                 <option value="administrasi">Administrasi</option>
                                 <option value="afdeling 01">Afdeling 01</option>
                                 <option value="afdeling 02">Afdeling 02</option>
                                 <option value="afdeling 03">Afdeling 03</option>
                                 <option value="afdeling 04">Afdeling 04</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="edit_unit" class="form-label">UNIT</label>
+                            <select class="form-select" id="edit_unit" name="kodeunit" required>
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach($units as $unit)
+                                <option value="{{ $unit->kodeunit }}">{{ $unit->kodeunit }} - {{ $unit->namaunit }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -327,14 +363,16 @@
                 // Ambil data dari atribut tombol
                 const id = this.getAttribute('data-id');
                 const username = this.getAttribute('data-username');
-                const email = this.getAttribute('data-email');
+                const sap = this.getAttribute('data-sap');
+                const unit = this.getAttribute('data-unit');
                 const levelUser = this.getAttribute('data-level_user');
 
                 // Isi form di modal
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_username').value = username;
-                document.getElementById('edit_email').value = email;
-                document.getElementById('edit_level-user').value = levelUser;
+                document.getElementById('edit_sap').value = sap;
+                document.getElementById('edit_unit').value = unit;
+                document.getElementById('edit_level_user').value = levelUser;
 
                 // Ganti action form sesuai id
                 document.getElementById('editForm').action = "/users/" + id;

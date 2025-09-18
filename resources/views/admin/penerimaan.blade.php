@@ -70,7 +70,7 @@
                                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
                                                 <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
                                                 <option value="tanggal_terima" {{ request('sort') == 'tanggal_terima' ? 'selected' : '' }}>Tanggal Terima</option>
-                                                <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
+                                                <option value="saldo_masuk" {{ request('sort') == 'saldo_masuk' ? 'selected' : '' }}>Saldo Masuk</option>
                                                 <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>Sumber</option>
                                             </select>
 
@@ -111,7 +111,7 @@
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>
-                                                    <th>KODE MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TANGGAL TERIMA</th>
                                                     <th>SALDO MASUK</th>
                                                     <th>SUMBER</th>
@@ -120,7 +120,7 @@
                                             <tbody>
                                                 @forelse ($penerimaan as $data)
                                                 <tr>
-                                                    <td>{{ $data->material->kode_material }}</td>
+                                                    <td>{{ $data->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($data->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $data->saldo_masuk }} {{ $data->material->satuan }}</td>
                                                     <td>{{ $data->sumber }}</td>
@@ -200,7 +200,7 @@
                         <div class="mb-3">
                             <label for="sumber" class="form-label">Sumber</label>
                             <input type="text" class="form-control @error('sumber') is-invalid @enderror"
-                                name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: Supplier A" required>
+                                name="sumber" id="sumber" value="{{ old('sumber') }}" placeholder="Contoh: CV A" required>
                             @error('sumber')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

@@ -1,18 +1,27 @@
-<div id="sidebar">
+<div id="sidebar shadow-lg">
     <div class="sidebar-wrapper active d-flex flex-column" style="height: 100vh;">
 
         <!-- Bagian atas sidebar -->
         <div class="sidebar-header position-relative">
-            <div class="d-flex justify-content-between align-items-center">
+            <img src="{{ asset('storage/logo/logoqr.png') }}"
+                alt="Logo"
+                style="height: 100px; width: auto; margin-left: -30px;margin-top: -40px;" />
+            <div class="d-flex justify-content-between align-items-center" style="margin-top: -20px;">
                 <!-- Logo & User Info -->
-                <div class="logo" style="margin-left: -10px;">
-                    <a href="#" class="fw-bold fs-4 text-primary text-decoration-none d-block" style="text-transform: uppercase;">
+                <div class="logo d-flex align-items-center">
+                    <!-- ✅ Tambahan Logo -->
+
+                    <a href="{{ route('profile.edit') }}" class="fw-bold fs-4 text-primary text-decoration-none d-block" style="text-transform: uppercase;">
                         @if(Auth::check())
                         {{ Auth::user()->username }}
                         <br>
-                        <span class="text-muted fw-normal" style="font-size: 0.9rem;">
+                        <span class="text-muted fw-normal" style="font-size: 1rem;">
                             {{ strtoupper(Auth::user()->level_user) }}
                         </span>
+                        <div class="text-muted fw-normal" style="font-size: 0.8rem;">
+                            {{ Auth::user()->unit->namaunit }}
+                        </div>
+                        
                         @else
                         User
                         @endif
@@ -29,7 +38,7 @@
                 ->orderBy('created_at', 'desc')
                 ->get();
                 @endphp
-                <div class="dropdown" style="margin-right: -5px;">
+                <div class="dropdown" style="margin-right: 10px;margin-top: -50px;">
                     <button class="btn btn-sm btn-outline-primary position-relative rounded-circle" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell"></i>
                         @if($notifications->count() > 0)
@@ -54,7 +63,7 @@
                 @endauth
 
 
-                <div class="d-flex align-items-center gap-1">
+                <div class="d-flex align-items-center gap-1" style="margin-right: -13px;margin-top: -50px;">
                     <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
                             role="img" class="iconify iconify--system-uicons" width="20" height="20"
@@ -110,6 +119,8 @@
                     </a>
                 </li>
 
+                @auth
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi']))
                 <!-- Penerimaan -->
                 <li class="sidebar-item {{ request()->routeIs('penerimaan') ? 'active' : '' }}">
                     <a href="{{ route('penerimaan') }}" class="sidebar-link">
@@ -117,6 +128,8 @@
                         <span>Penerimaan</span>
                     </a>
                 </li>
+                @endif
+                @endauth
 
                 <!-- Pengeluaran -->
                 <li class="sidebar-item {{ request()->routeIs('pengeluaran') ? 'active' : '' }}">

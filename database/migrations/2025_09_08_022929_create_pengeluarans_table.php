@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tanggal_keluar');
             $table->integer('saldo_keluar');
             $table->integer('saldo_sisa');
-            $table->string('sumber');
+            $table->json('sumber');
             $table->string('status')->default('menunggu');
             $table->timestamps();
         });

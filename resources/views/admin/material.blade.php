@@ -55,6 +55,7 @@
                                             <select name="sort" class="form-select">
                                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
                                                 <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
+                                                <option value="total_saldo" {{ request('sort') == 'total_saldo' ? 'selected' : '' }}>Total Saldo</option>
                                                 <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
                                             </select>
 
@@ -96,14 +97,14 @@
                                     <!-- table hover -->
                                     <div class="table-responsive px-5 pt-4 pb-5">
                                         @auth
-                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        @if(in_array(Auth::user()->level_user, ['administrator']))
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>
                                                     <th>NO</th>
-                                                    <th>PLANT</th>
+                                                    <th>NAMA UNIT</th>
                                                     <th>KODE MATERIAL</th>
-                                                    <th>URAIAN MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TOTAL SALDO</th>
                                                     <th>SATUAN</th>
                                                     <th>AKSI</th>
@@ -113,7 +114,7 @@
                                                 @forelse ($materials as $index => $material)
                                                 <tr>
                                                     <td>{{ $materials->firstItem() + $index }}</td>
-                                                    <td>{{ $material->plant }}</td>
+                                                    <td>{{ $material->unit->namaunit ?? '-' }}</td>
                                                     <td>{{ $material->kode_material }}</td>
                                                     <td class="text-bold-500">{{ $material->uraian_material }}</td>
                                                     <td>{{ $material->total_saldo }}</td>
@@ -133,7 +134,8 @@
                                                                 data-plant="{{ $material->plant }}"
                                                                 data-kode="{{ $material->kode_material }}"
                                                                 data-uraian="{{ $material->uraian_material }}"
-                                                                data-satuan="{{ $material->satuan }}">
+                                                                data-satuan="{{ $material->satuan }}"
+                                                                data-total_saldo="{{ $material->total_saldo }}">
                                                                 <i class="bi bi-pencil"></i>
                                                             </button>
 
@@ -158,7 +160,7 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="4">Tidak ada data material</td>
+                                                    <td colspan="6">Tidak ada data material</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
@@ -172,14 +174,91 @@
                                         @endauth
 
                                         @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi']))
+                                        <table class="table table-hover mb-0 text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>NO</th>
+                                                    <th>NAMA UNIT</th>
+                                                    <th>KODE MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
+                                                    <th>TOTAL SALDO</th>
+                                                    <th>SATUAN</th>
+                                                    <th>AKSI</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($unitAdministrasi as $index => $material)
+                                                <tr>
+                                                    <td>{{ $materials->firstItem() + $index }}</td>
+                                                    <td>{{ $material->unit->namaunit ?? '-' }}</td>
+                                                    <td>{{ $material->kode_material }}</td>
+                                                    <td class="text-bold-500">{{ $material->uraian_material }}</td>
+                                                    <td>{{ $material->total_saldo }}</td>
+                                                    <td class="text-bold-500">{{ $material->satuan }}</td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <!-- Tombol Edit -->
+                                                            <!-- Tombol Edit Material -->
+                                                            <button
+                                                                type="button"
+                                                                title="Edit"
+                                                                style="border-radius: 50%;"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editModal"
+                                                                data-id="{{ $material->id }}"
+                                                                data-plant="{{ $material->plant }}"
+                                                                data-kode="{{ $material->kode_material }}"
+                                                                data-uraian="{{ $material->uraian_material }}"
+                                                                data-satuan="{{ $material->satuan }}"
+                                                                data-total_saldo="{{ $material->total_saldo }}">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+
+
+                                                            <!-- Tombol Hapus -->
+                                                            <form id="delete-form-{{ $material->id }}" action="{{ route('material.destroy', $material->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                                                    title="Hapus"
+                                                                    data-id="{{ $material->id }}"
+                                                                    onclick="confirmDelete(this)">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+
+                                                            </form>
+
+
+
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="6">Tidak ada data material</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                        <!-- Pagination -->
+                                        <div class="mt-3">
+                                            {{ $unitAdministrasi->links('pagination::bootstrap-5') }}
+                                        </div>
+                                        <!-- end pagination -->
+                                        @endif
+                                        @endauth
+
+                                        @auth
                                         @if(Str::contains(Auth::user()->level_user, 'afdeling'))
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>
                                                     <th>NO</th>
-                                                    <th>PLANT</th>
+                                                    <th>NAMA UNIT</th>
                                                     <th>KODE MATERIAL</th>
-                                                    <th>URAIAN MATERIAL</th>
+                                                    <th>NAMA PUPUK</th>
                                                     <th>TOTAL SALDO</th>
                                                     <th>SATUAN</th>
                                                 </tr>
@@ -188,7 +267,7 @@
                                                 @forelse ($materials as $index => $material)
                                                 <tr>
                                                     <td>{{ $materials->firstItem() + $index }}</td>
-                                                    <td>{{ $material->plant }}</td>
+                                                    <td>{{ $material->unit->namaunit ?? '-' }}</td>
                                                     <td>{{ $material->kode_material }}</td>
                                                     <td class="text-bold-500">{{ $material->uraian_material }}</td>
                                                     <td>{{ $material->total_saldo }}</td>
@@ -238,13 +317,22 @@
                     <form action="{{ route('material.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
-                            <label for="plant" class="form-label">Kode Plant</label>
-                            <input type="text" class="form-control @error('plant') is-invalid @enderror"
-                                name="plant" id="plant" value="{{ old('plant') }}" placeholder="Contoh: 3E02" required>
+                            <label for="plant" class="form-label">Nama Unit</label>
+                            <select class="form-select @error('plant') is-invalid @enderror"
+                                name="plant" id="plant" required>
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach($units as $unit)
+                                <option value="{{ $unit->kodeunit }}"
+                                    {{ old('plant') == $unit->kodeunit ? 'selected' : '' }}>
+                                    {{ $unit->namaunit }}
+                                </option>
+                                @endforeach
+                            </select>
                             @error('plant')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
 
                         <div class="mb-3">
                             <label for="kode_material" class="form-label">Kode Material</label>
@@ -256,10 +344,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="uraian_material" class="form-label">Uraian Material</label>
+                            <label for="uraian_material" class="form-label">Nama Pupuk</label>
                             <input type="text" class="form-control @error('uraian_material') is-invalid @enderror"
-                                name="uraian_material" id="uraian_material" value="{{ old('uraian_material') }}" placeholder="Contoh: FERTILIZER:KCL (MOP);60% K2O;GRANUL" required>
+                                name="uraian_material" id="uraian_material" value="{{ old('uraian_material') }}" placeholder="Contoh: DOLOMITE" required>
                             @error('uraian_material')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="total_saldo" class="form-label">Saldo Awal /Kg</label>
+                            <input type="number" class="form-control @error('total_saldo') is-invalid @enderror"
+                                name="total_saldo" id="total_saldo" value="{{ old('total_saldo') }}" placeholder="Contoh: DOLOMITE" required>
+                            @error('total_saldo')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -300,9 +397,17 @@
                         <input type="hidden" id="edit_id" name="id">
 
                         <div class="mb-3">
-                            <label for="edit_plant" class="form-label">Kode plant</label>
-                            <input type="text" class="form-control" id="edit_plant" name="plant">
+                            <label for="edit_plant" class="form-label">Nama Unit</label>
+                            <select class="form-select" id="edit_plant" name="plant" required>
+                                <option value="">-- Pilih Unit --</option>
+                                @foreach($units as $unit)
+                                <option value="{{ $unit->kodeunit }}">
+                                    {{ $unit->namaunit }}
+                                </option>
+                                @endforeach
+                            </select>
                         </div>
+
 
                         <div class="mb-3">
                             <label for="edit_kode_material" class="form-label">Kode Material</label>
@@ -312,6 +417,11 @@
                         <div class="mb-3">
                             <label for="edit_uraian_material" class="form-label">Uraian Material</label>
                             <input type="text" class="form-control" id="edit_uraian_material" name="uraian_material">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="edit_total_saldo" class="form-label">Total Saldo</label>
+                            <input type="text" class="form-control" id="edit_total_saldo" name="total_saldo">
                         </div>
 
                     </div>
@@ -375,12 +485,14 @@
                 const kode = this.getAttribute('data-kode');
                 const plant = this.getAttribute('data-plant');
                 const uraian = this.getAttribute('data-uraian');
+                const saldoAwal = this.getAttribute('data-total_saldo');
 
                 // Isi form di modal
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_kode_material').value = kode;
                 document.getElementById('edit_plant').value = plant;
                 document.getElementById('edit_uraian_material').value = uraian;
+                document.getElementById('edit_total_saldo').value = saldoAwal;
 
                 // Ganti action form sesuai id
                 document.getElementById('editForm').action = "/material/" + id;
@@ -388,4 +500,30 @@
         });
     });
     // end script untuk modal edit
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.btn-edit');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const plant = this.getAttribute('data-plant');
+                const kode = this.getAttribute('data-kode');
+                const uraian = this.getAttribute('data-uraian');
+                const saldoAwal = this.getAttribute('data-total_saldo');
+
+                // Isi form modal
+                document.getElementById('edit_id').value = id;
+                document.getElementById('edit_kode_material').value = kode;
+                document.getElementById('edit_uraian_material').value = uraian;
+                document.getElementById('edit_total_saldo').value = saldoAwal;
+
+                // Set selected value untuk dropdown plant
+                document.getElementById('edit_plant').value = plant;
+
+                // Ganti action form sesuai id
+                document.getElementById('editForm').action = "/material/" + id;
+            });
+        });
+    });
 </script>

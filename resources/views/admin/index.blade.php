@@ -15,7 +15,7 @@
                 <div class="col-12 col-lg-12">
                     <div class="row">
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card">
+                            <div class="card shadow">
                                 <div class="card-body px-4 py-4-5">
                                     <div class="row">
                                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
@@ -33,7 +33,7 @@
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card">
+                            <div class="card shadow">
                                 <div class="card-body px-4 py-4-5">
                                     <div class="row">
                                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
@@ -51,7 +51,7 @@
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card">
+                            <div class="card shadow">
                                 <div class="card-body px-4 py-4-5">
                                     <div class="row">
                                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
@@ -69,7 +69,7 @@
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card">
+                            <div class="card shadow">
                                 <div class="card-body px-4 py-4-5">
                                     <div class="row">
                                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
@@ -87,92 +87,38 @@
                         </div>
                     </div>
 
+
                     <div class="row">
                         <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4>Profile Visit</h4>
+                            <div class="card shadow">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h4>DIAGRAM PENERIMAAN DAN PENGELUARAN </h4>
+                                    <select id="yearSelectArea" class="form-select" style="width:auto;">
+                                        @foreach($years as $year)
+                                        <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
+                                            {{ $year }}
+                                        </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="card-body">
-                                    <div id="chart-profile-visit"></div>
+                                    <div id="area"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-12 col-xl-6">
-                            <div class="card">
+                        <div class="col-12">
+                            <div class="card shadow">
                                 <div class="card-header">
-                                    <h4>Profile Visit</h4>
+                                    <h4>GRAFIK STOK MATERIAL</h4>
                                 </div>
                                 <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-7">
-                                            <div class="d-flex align-items-center">
-                                                <svg class="bi text-primary" width="32" height="32" fill="blue"
-                                                    style="width:10px">
-                                                    <use
-                                                        xlink:href="/../assets/static/images/bootstrap-icons.svg#circle-fill" />
-                                                </svg>
-                                                <h5 class="mb-0 ms-3">Europe</h5>
-                                            </div>
-                                        </div>
-                                        <div class="col-5">
-                                            <h5 class="mb-0 text-end">862</h5>
-                                        </div>
-                                        <div class="col-12">
-                                            <div id="chart-europe"></div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-7">
-                                            <div class="d-flex align-items-center">
-                                                <svg class="bi text-success" width="32" height="32" fill="blue"
-                                                    style="width:10px">
-                                                    <use
-                                                        xlink:href="/../assets/static/images/bootstrap-icons.svg#circle-fill" />
-                                                </svg>
-                                                <h5 class="mb-0 ms-3">America</h5>
-                                            </div>
-                                        </div>
-                                        <div class="col-5">
-                                            <h5 class="mb-0 text-end">375</h5>
-                                        </div>
-                                        <div class="col-12">
-                                            <div id="chart-america"></div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-7">
-                                            <div class="d-flex align-items-center">
-                                                <svg class="bi text-danger" width="32" height="32" fill="blue"
-                                                    style="width:10px">
-                                                    <use
-                                                        xlink:href="/../assets/static/images/bootstrap-icons.svg#circle-fill" />
-                                                </svg>
-                                                <h5 class="mb-0 ms-3">Indonesia</h5>
-                                            </div>
-                                        </div>
-                                        <div class="col-5">
-                                            <h5 class="mb-0 text-end">1025</h5>
-                                        </div>
-                                        <div class="col-12">
-                                            <div id="chart-indonesia"></div>
-                                        </div>
-                                    </div>
+                                    <div id="stokMaterialChart"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-xl-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4>Visitors Profile</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div id="chart-visitors-profile"></div>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </section>
@@ -181,3 +127,104 @@
     </div>
 
 </x-layout>
+
+<script>
+    var areaOptions = {
+        series: [{
+                name: "Pengeluaran",
+                data: {!! json_encode($pengeluaranData) !!},
+            },
+            {
+                name: "Penerimaan",
+                data: {!! json_encode($penerimaanData) !!},
+            }
+        ],
+        chart: {
+            height: 350,
+            type: "area",
+            toolbar: {
+                show: true, // ✅ aktifkan toolbar
+                tools: {
+                    download: true, // ✅ tombol download gambar/chart
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            },
+            zoom: {
+                enabled: false
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: "smooth"
+        },
+        colors: ["#dc3545", "#28a745"],
+        xaxis: {
+            type: "category",
+            categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        },
+        tooltip: {
+            x: {
+                format: "MMM"
+            },
+            y: {
+                formatter: function(val) {
+                    return val + " /Kg";
+                }
+            }
+        },
+    };
+
+
+    var areaChart = new ApexCharts(document.querySelector("#area"), areaOptions);
+    areaChart.render();
+
+    // Event filter tahun
+    document.getElementById("yearSelectArea").addEventListener("change", function() {
+        var year = this.value;
+        fetch(`/dashboard/chart-data/${year}`)
+            .then(res => res.json())
+            .then(data => {
+                areaChart.updateSeries([{
+                        name: "Pengeluaran",
+                        data: data.pengeluaran
+                    },
+                    {
+                        name: "Penerimaan",
+                        data: data.penerimaan
+                    }
+                ]);
+            });
+    });
+</script>
+<script>
+    // === Grafik Stok Material ===
+    var stokOptions = {
+        series: [{
+            data: {!! json_encode($stokData) !!},
+            
+        }],
+        chart: {
+            type: 'bar',
+            height: 350
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+            }
+        },
+        xaxis: {
+            categories: {!! json_encode($stokLabels) !!},
+
+        },
+        colors: ["#827fe2ff"]
+    };
+    var stokChart = new ApexCharts(document.querySelector("#stokMaterialChart"), stokOptions);
+    stokChart.render();
+</script>

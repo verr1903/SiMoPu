@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Material;
+use App\Models\Unit;
 
 class MaterialController extends Controller
 {
@@ -12,25 +13,39 @@ class MaterialController extends Controller
         $query = Material::query();
 
         // 🔍 Search
-        if ($request->has('search') && $request->search != '') {
-            $query->where('kode_material', 'like', '%' . $request->search . '%')
-                ->orWhere('uraian_material', 'like', '%' . $request->search . '%')
-                ->orWhere('total_saldo', 'like', '%' . $request->search . '%')
-                ->orWhere('satuan', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_material', 'like', "%{$search}%")
+                    ->orWhere('uraian_material', 'like', "%{$search}%")
+                    ->orWhere('total_saldo', 'like', "%{$search}%")
+                    ->orWhere('satuan', 'like', "%{$search}%");
+            });
         }
 
         // 🔄 Sorting
-        $sortBy = $request->get('sort', 'created_at'); // default sort by created_at
-        $order  = $request->get('order', 'desc');      // default order desc
-
+        $sortBy = in_array($request->sort, ['created_at', 'kode_material', 'uraian_material', 'total_saldo', 'satuan'])
+            ? $request->sort
+            : 'created_at';
+        $order = $request->order === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $order);
 
         // 📄 Pagination
         $materials = $query->paginate(10)->withQueryString();
 
+        $units = Unit::all();
+
+        $kodeUnitSession = session('kodeunit'); // pastikan session('kodeunit') sudah di-set saat login
+        $unitAdministrasi = Material::where('plant', $kodeUnitSession)
+            ->orderBy('kode_material', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+
         return view('admin.material', [
             'title' => 'Material',
             'materials' => $materials,
+            'unitAdministrasi' => $unitAdministrasi,
+            'units'     => $units,
         ]);
     }
 
