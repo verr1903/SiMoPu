@@ -115,6 +115,7 @@
                                                     <th>TANGGAL TERIMA</th>
                                                     <th>SALDO MASUK</th>
                                                     <th>SUMBER</th>
+                                                    <th>AKSI</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -124,6 +125,36 @@
                                                     <td>{{ \Carbon\Carbon::parse($data->tanggal_terima)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $data->saldo_masuk }} {{ $data->material->satuan }}</td>
                                                     <td>{{ $data->sumber }}</td>
+                                                    <!-- Tombol Edit & Hapus di table -->
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <!-- Edit -->
+                                                            <button type="button"
+                                                                style="border-radius: 50%;"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#editModal"
+                                                                data-id="{{ $data->id }}"
+                                                                data-material="{{ $data->material_id }}"
+                                                                data-tanggal="{{ $data->tanggal_terima }}"
+                                                                data-saldo="{{ $data->saldo_masuk }}"
+                                                                data-sumber="{{ $data->sumber }}"
+                                                                title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+
+                                                            <!-- Hapus -->
+                                                            <form id="delete-form-{{ $data->id }}" action="{{ route('penerimaan.destroy', $data->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="btn btn-danger btn-sm rounded-circle"
+                                                                    onclick="confirmDelete(this)" data-id="{{ $data->id }}">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+
                                                 </tr>
                                                 @empty
                                                 <tr>
@@ -225,6 +256,57 @@
     </div>
     <!-- End Modal Tambah Material -->
 
+    <!-- modal edit -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="editLabel">Edit Penerimaan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="editForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id" name="id">
+
+                    <div class="mb-3">
+                        <label for="edit_material_id" class="form-label">Pilih Material</label>
+                        <select class="form-select" id="edit_material_id" name="material_id" required>
+                            @foreach($materials as $material)
+                                <option value="{{ $material->id }}">{{ $material->kode_material }} - {{ $material->uraian_material }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_tanggal" class="form-label">Tanggal Penerimaan</label>
+                        <input type="date" class="form-control" id="edit_tanggal" name="tanggal_terima" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_saldo" class="form-label">Saldo Masuk /Kg</label>
+                        <input type="number" min="1" class="form-control" id="edit_saldo" name="saldo_masuk" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_sumber" class="form-label">Sumber</label>
+                        <input type="text" class="form-control" id="edit_sumber" name="sumber" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning text-white">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
 </x-layout>
 
 <!-- script modal tambah -->
@@ -236,3 +318,44 @@
     });
 </script>
 @endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('.btn-edit');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const material = this.getAttribute('data-material');
+            const tanggal = this.getAttribute('data-tanggal');
+            const saldo = this.getAttribute('data-saldo');
+            const sumber = this.getAttribute('data-sumber');
+
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_material_id').value = material;
+            document.getElementById('edit_tanggal').value = tanggal;
+            document.getElementById('edit_saldo').value = saldo;
+            document.getElementById('edit_sumber').value = sumber;
+
+            document.getElementById('editForm').action = "/penerimaan/" + id;
+        });
+    });
+});
+
+    function confirmDelete(button) {
+        const id = button.dataset.id;
+        Swal.fire({
+            title: 'Apakah kamu yakin?',
+            text: "Data ini akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+</script>

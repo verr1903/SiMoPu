@@ -61,6 +61,22 @@ class PengeluaranController extends Controller
             END
         ");
 
+        // 🔽 Sorting sesuai dropdown
+        $sort  = $request->get('sort', 'created_at'); // default created_at
+        $order = $request->get('order', 'desc');      // default desc
+
+        if (in_array($sort, ['created_at', 'au58', 'uraian_material', 'tanggal_keluar', 'saldo_keluar', 'sumber'])) {
+            if (in_array($sort, ['uraian_material'])) {
+                // Sorting field dari tabel relasi (materials)
+                $query->join('materials', 'pengeluarans.material_id', '=', 'materials.id')
+                    ->orderBy("materials.{$sort}", $order)
+                    ->select('pengeluarans.*');
+            } else {
+                // Sorting field langsung di tabel pengeluarans
+                $query->orderBy("pengeluarans.{$sort}", $order);
+            }
+        }
+
         // 🔄 Pagination tabel 1
         $Pengeluarans = $query->urutkanStatus()
             ->paginate(10, ['*'], 'tabel1')
@@ -413,7 +429,7 @@ class PengeluaranController extends Controller
             $jamMinimal = Carbon::now('Asia/Jakarta')->setHour(9)->setMinute(34)->setSecond(0);
 
             if ($waktuSekarang->greaterThanOrEqualTo($jamMinimal)) {
-            // if ($scanKeluar->diffInMinutes(now()) >= 1) {
+                // if ($scanKeluar->diffInMinutes(now()) >= 1) {
                 $realisasi->update(['scan_akhir' => now()]);
                 $status = 'success';
                 $message = 'Scan akhir berhasil dicatat pada ' . Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i:s');

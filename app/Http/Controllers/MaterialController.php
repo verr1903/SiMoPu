@@ -15,20 +15,31 @@ class MaterialController extends Controller
         // 🔍 Search
         if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->where('kode_material', 'like', "%{$search}%")
                     ->orWhere('uraian_material', 'like', "%{$search}%")
                     ->orWhere('total_saldo', 'like', "%{$search}%")
                     ->orWhere('satuan', 'like', "%{$search}%");
-            });
+            })
+                // 🔍 Cari di relasi Unit
+                ->orWhereHas('unit', function ($q) use ($search) {
+                    $q->where('namaunit', 'like', "%{$search}%");
+                });
         }
 
+
         // 🔄 Sorting
-        $sortBy = in_array($request->sort, ['created_at', 'kode_material', 'uraian_material', 'total_saldo', 'satuan'])
-            ? $request->sort
-            : 'created_at';
-        $order = $request->order === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sortBy, $order);
+        $sort  = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+
+        if (in_array($sort, ['created_at', 'kode_material', 'uraian_material', 'total_saldo'])) {
+            $query->orderBy($sort, $order);
+        } elseif ($sort === 'namaunit') {
+            $query->join('units', 'materials.plant', '=', 'units.kodeunit')
+                ->orderBy('units.namaunit', $order)
+                ->select('materials.*'); // biar hasil tetap model Material
+        }
 
         // 📄 Pagination
         $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session

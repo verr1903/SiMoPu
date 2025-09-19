@@ -57,6 +57,7 @@
                                                 <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
                                                 <option value="total_saldo" {{ request('sort') == 'total_saldo' ? 'selected' : '' }}>Total Saldo</option>
                                                 <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Uraian Material</option>
+                                                <option value="namaunit" {{ request('sort') == 'namaunit' ? 'selected' : '' }}>Nama Unit</option> <!-- 👈 tambahan -->
                                             </select>
 
                                             <!-- Order (Terkecil/Terbesar) -->
@@ -251,7 +252,7 @@
                                         @endauth
 
                                         @auth
-                                        @if(Str::contains(Auth::user()->level_user, ['afdeling', 'manager', 'ktu']))
+                                        @if(Str::contains(Auth::user()->level_user, ['afdeling', 'manager', 'atu']))
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>

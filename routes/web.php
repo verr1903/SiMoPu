@@ -48,8 +48,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
     Route::patch('/pengeluaran/{id}/status', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus');
 
-    Route::get('penerimaan', [PenerimaanController::class, 'index'])->name('penerimaan');
+    Route::get('/penerimaan', [PenerimaanController::class, 'index'])->name('penerimaan');
     Route::post('/penerimaan', [PenerimaanController::class, 'store'])->name('penerimaan.store');
+    Route::put('penerimaan/{id}', [PenerimaanController::class, 'update'])->name('penerimaan.update');
+    Route::delete('/penerimaan/{id}', [PenerimaanController::class, 'destroy'])->name('penerimaan.destroy');
 
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials');
     Route::post('/material', [MaterialController::class, 'store'])->name('material.store');

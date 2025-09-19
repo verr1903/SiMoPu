@@ -13,7 +13,8 @@
 
                     <a href="{{ route('profile.edit') }}" class="fw-bold fs-4 text-primary text-decoration-none d-block" style="text-transform: uppercase;">
                         @if(Auth::check())
-                        {{ Auth::user()->username }}
+                        {{ \Illuminate\Support\Str::before(Auth::user()->username, ' ') }}
+
                         <br>
                         <span class="text-muted fw-normal" style="font-size: 1rem;">
                             {{ strtoupper(Auth::user()->level_user) }}
@@ -21,7 +22,7 @@
                         <div class="text-muted fw-normal" style="font-size: 0.8rem;">
                             {{ Auth::user()->unit->namaunit }}
                         </div>
-                        
+
                         @else
                         User
                         @endif
@@ -120,7 +121,7 @@
                 </li>
 
                 @auth
-                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'ktu']))
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'atu']))
                 <!-- Penerimaan -->
                 <li class="sidebar-item {{ request()->routeIs('penerimaan') ? 'active' : '' }}">
                     <a href="{{ route('penerimaan') }}" class="sidebar-link">
@@ -140,7 +141,7 @@
                 </li>
 
                 @auth
-                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'ktu']))
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'atu']))
                 <!-- Realisasi Pengeluaran -->
                 <li class="sidebar-item {{ request()->routeIs('realisasiPengeluaran') ? 'active' : '' }}">
                     <a href="{{ route('realisasiPengeluaran') }}" class="sidebar-link">

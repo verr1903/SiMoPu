@@ -75,6 +75,7 @@
                                                 <option value="tanggal_keluar" {{ request('sort') == 'tanggal_keluar' ? 'selected' : '' }}>Tanggal Keluar</option>
                                                 <option value="saldo_keluar" {{ request('sort') == 'saldo_keluar' ? 'selected' : '' }}>Saldo Keluar</option>
                                                 <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>BLOK</option>
+                                                <option value="au58" {{ request('sort') == 'au58' ? 'selected' : '' }}>AU 58</option>
                                             </select>
 
                                             <!-- Sort Order -->
@@ -117,7 +118,7 @@
 
                                         {{-- 🔹 Tabel dengan STATUS & AKSI --}}
                                         @auth
-                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator', 'manager', 'ktu']))
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator', 'manager', 'atu']))
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
