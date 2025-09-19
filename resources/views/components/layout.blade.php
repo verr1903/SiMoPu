@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{$title}} - Mazer Admin Dashboard</title>
 
-    <link rel="shortcut icon" href=".//../assets/compiled/svg/favicon.svg" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('storage/logo/logoqr.png') }}" type="image/png">
 
     <link rel="stylesheet" href=".//../assets/compiled/css/app.css">
     <link rel="stylesheet" href=".//../assets/compiled/css/app-dark.css">

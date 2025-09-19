@@ -11,7 +11,7 @@
     <!-- ✅ Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
-
+    <link rel="shortcut icon" href="{{ asset('storage/logo/logoqr.png') }}" type="image/png">
     <link rel="stylesheet" href="./../assets/compiled/css/login-regis.css">
     <title>Login | Sistem Informasi</title>
 

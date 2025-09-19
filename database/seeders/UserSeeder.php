@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
                 'sap'        => '500196',
                 'password'   => Hash::make('12345678'),
                 'level_user' => 'manager', 
-                'kodeunit'   => '3E02', 
+                'kodeunit'   => '3R00', 
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
