@@ -93,7 +93,7 @@
                 </div>
                 <div class="toggle-panel toggle-right">
                     <h1>Hallo</h1>
-                    <p>Selamat datang di Sistem SiMoPu, monitoring pupuk mudah.</p>
+                    <p>Selamat datang di SiMoPu, Sistem Monitoring Pupuk.</p>
                     <button class="btn btn-outline-light mt-2 d-none" id="register">Daftar</button>
                 </div>
             </div>
