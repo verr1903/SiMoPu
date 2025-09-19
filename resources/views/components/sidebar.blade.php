@@ -120,7 +120,7 @@
                 </li>
 
                 @auth
-                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi']))
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'ktu']))
                 <!-- Penerimaan -->
                 <li class="sidebar-item {{ request()->routeIs('penerimaan') ? 'active' : '' }}">
                     <a href="{{ route('penerimaan') }}" class="sidebar-link">
@@ -140,7 +140,7 @@
                 </li>
 
                 @auth
-                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi']))
+                @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'ktu']))
                 <!-- Realisasi Pengeluaran -->
                 <li class="sidebar-item {{ request()->routeIs('realisasiPengeluaran') ? 'active' : '' }}">
                     <a href="{{ route('realisasiPengeluaran') }}" class="sidebar-link">

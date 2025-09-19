@@ -71,9 +71,9 @@
                                             <!-- Sort Field -->
                                             <select name="sort" class="form-select">
                                                 <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>Tanggal Input</option>
-                                                <option value="kode_material" {{ request('sort') == 'kode_material' ? 'selected' : '' }}>Kode Material</option>
+                                                <option value="uraian_material" {{ request('sort') == 'uraian_material' ? 'selected' : '' }}>Nama Pupuk</option>
                                                 <option value="tanggal_keluar" {{ request('sort') == 'tanggal_keluar' ? 'selected' : '' }}>Tanggal Keluar</option>
-                                                <option value="qty" {{ request('sort') == 'qty' ? 'selected' : '' }}>QTY</option>
+                                                <option value="saldo_keluar" {{ request('sort') == 'saldo_keluar' ? 'selected' : '' }}>Saldo Keluar</option>
                                                 <option value="sumber" {{ request('sort') == 'sumber' ? 'selected' : '' }}>BLOK</option>
                                             </select>
 
@@ -117,7 +117,7 @@
 
                                         {{-- 🔹 Tabel dengan STATUS & AKSI --}}
                                         @auth
-                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator', 'manager', 'ktu']))
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
@@ -127,7 +127,11 @@
                                                     <th>SALDO KELUAR</th>
                                                     <th>AFDELING</th>
                                                     <th>BLOK</th>
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                                     <th>AKSI</th>
+                                                    @endif
+                                                    @endauth
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -139,6 +143,8 @@
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
                                                     <td>{{ $item->user->level_user ?? '-' }}</td>
                                                     <td>{{ implode(', ', (array) $item->sumber) }}</td>
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                                     <td>
                                                         @if($item->status == 'menunggu')
                                                         <form action="{{ route('pengeluaran.updateStatus', $item->id) }}" method="POST" class="d-inline">
@@ -169,6 +175,8 @@
                                                         </span>
                                                         @endif
                                                     </td>
+                                                    @endif
+                                                    @endauth
                                                 </tr>
                                                 @empty
                                                 <tr>

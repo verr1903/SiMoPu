@@ -10,42 +10,58 @@ class PenerimaanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Penerimaan::with('material');
+        $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session
 
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('material', function ($q) use ($search) {
-                $q->where('kode_material', 'like', "%{$search}%")
-                  ->orWhere('uraian_material', 'like', "%{$search}%");
-            })
-            ->orWhere('tanggal_terima', 'like', "%{$search}%")
-            ->orWhere('saldo_masuk', 'like', "%{$search}%")
-            ->orWhere('sumber', 'like', "%{$search}%");
-        }
+$query = Penerimaan::with('material');
 
-        // Sorting: default penerimaans.created_at
-        $sortBy = $request->get('sort', 'created_at');
-        $order  = $request->get('order', 'desc');
+// Search
+if ($request->filled('search')) {
+    $search = $request->search;
+    $query->where(function($q) use ($search) {
+        $q->whereHas('material', function ($q2) use ($search) {
+            $q2->where('kode_material', 'like', "%{$search}%")
+               ->orWhere('uraian_material', 'like', "%{$search}%");
+        })
+        ->orWhere('tanggal_terima', 'like', "%{$search}%")
+        ->orWhere('saldo_masuk', 'like', "%{$search}%")
+        ->orWhere('sumber', 'like', "%{$search}%");
+    });
+}
 
-        // Jika sorting berdasarkan kolom pada tabel materials, gunakan subquery orderBy
-        if (in_array($sortBy, ['kode_material', 'uraian_material'])) {
-            $query->orderByRaw("(select {$sortBy} from materials where materials.id = penerimaans.material_id) {$order}");
-        } else {
-            // aman-kan nama kolom ke tabel penerimaans
-            $query->orderBy("penerimaans.{$sortBy}", $order);
-        }
+// Filter berdasarkan kodeunit, kecuali 3R00
+if ($kodeUnit !== '3R00') {
+    $query->whereHas('material', function ($q) use ($kodeUnit) {
+        $q->where('plant', $kodeUnit);
+    });
+}
 
-        $penerimaan = $query->paginate(10)->withQueryString();
+// Sorting: default penerimaans.created_at
+$sortBy = $request->get('sort', 'created_at');
+$order  = $request->get('order', 'desc');
 
-        // KIRIM materials untuk dropdown pada modal
-        $materials = Material::orderBy('created_at', 'desc')->get();
+// Jika sorting berdasarkan kolom pada tabel materials, gunakan subquery orderBy
+if (in_array($sortBy, ['kode_material', 'uraian_material'])) {
+    $query->orderByRaw("(select {$sortBy} from materials where materials.id = penerimaans.material_id) {$order}");
+} else {
+    $query->orderBy("penerimaans.{$sortBy}", $order);
+}
 
-        return view('admin.penerimaan', [
-            'title' => 'Penerimaan',
-            'penerimaan' => $penerimaan,
-            'materials' => $materials,
-        ]);
+// Paginate
+$penerimaan = $query->paginate(10)->withQueryString();
+
+// KIRIM materials untuk dropdown pada modal
+$materialsQuery = Material::orderBy('created_at', 'desc');
+if ($kodeUnit !== '3R00') {
+    $materialsQuery->where('plant', $kodeUnit);
+}
+$materials = $materialsQuery->get();
+
+return view('admin.penerimaan', [
+    'title' => 'Penerimaan',
+    'penerimaan' => $penerimaan,
+    'materials' => $materials,
+]);
+
     }
 
     public function store(Request $request)

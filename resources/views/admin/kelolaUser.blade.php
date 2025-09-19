@@ -97,7 +97,7 @@
 
                                     <!-- table hover -->
                                     <div class="table-responsive px-5 pt-4 pb-5">
-                                        <table class="table table-hover mb-0 text-center">
+                                        <table class="table table-hover mb-0 text-center" style="text-transform: uppercase;">
                                             <thead>
                                                 <tr>
                                                     <th>NO</th>
@@ -213,8 +213,8 @@
                             <select class="form-select @error('level_user') is-invalid @enderror" id="level_user" name="level_user" required>
                                 <option value="">-- Pilih LEVEL AKSES --</option>
                                 <option value="administrator" {{ old('level_user') == 'administrator' ? 'selected' : '' }}>Administrator</option>
-                                <option value="administrasi" {{ old('level_user') == 'viewer_manager' ? 'selected' : '' }}>Manager</option>
-                                <option value="administrasi" {{ old('level_user') == 'viewer_ktu' ? 'selected' : '' }}>KTU</option>
+                                <option value="administrasi" {{ old('level_user') == 'manager' ? 'selected' : '' }}>Manager</option>
+                                <option value="administrasi" {{ old('level_user') == 'ktu' ? 'selected' : '' }}>KTU</option>
                                 <option value="administrasi" {{ old('level_user') == 'administrasi' ? 'selected' : '' }}>Administrasi</option>
                                 <option value="afdeling 01" {{ old('level_user') == 'afdeling 01' ? 'selected' : '' }}>Afdeling 01</option>
                                 <option value="afdeling 02" {{ old('level_user') == 'afdeling 02' ? 'selected' : '' }}>Afdeling 02</option>
@@ -289,6 +289,8 @@
                             <select class="form-select" id="edit_level_user" name="level_user">
                                 <option value="">-- Pilih LEVEL AKSES --</option>
                                 <option value="administrator">Administrator</option>
+                                <option value="manager">Manager</option>
+                                <option value="ktu">KTU</option>
                                 <option value="administrasi">Administrasi</option>
                                 <option value="afdeling 01">Afdeling 01</option>
                                 <option value="afdeling 02">Afdeling 02</option>

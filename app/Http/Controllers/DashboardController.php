@@ -13,10 +13,41 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $totalMaterial    = Material::count();
-        $totalPenerimaan  = Penerimaan::count();
-        $totalPengeluaran = Pengeluaran::count();
-        $totalRealisasi   = RealisasiPengeluaran::count();
+        $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session
+
+        // 🔹 Total Material
+        $materialQuery = Material::query();
+        if ($kodeUnit !== '3R00') {
+            $materialQuery->where('plant', $kodeUnit);
+        }
+        $totalMaterial = $materialQuery->count();
+
+        // 🔹 Total Penerimaan
+        $penerimaanQuery = Penerimaan::query();
+        if ($kodeUnit !== '3R00') {
+            $penerimaanQuery->whereHas('material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
+        $totalPenerimaan = $penerimaanQuery->count();
+
+        // 🔹 Total Pengeluaran
+        $pengeluaranQuery = Pengeluaran::query();
+        if ($kodeUnit !== '3R00') {
+            $pengeluaranQuery->whereHas('material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
+        $totalPengeluaran = $pengeluaranQuery->count();
+
+        // 🔹 Total Realisasi
+        $realisasiQuery = RealisasiPengeluaran::query();
+        if ($kodeUnit !== '3R00') {
+            $realisasiQuery->whereHas('pengeluaran.material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
+        $totalRealisasi = $realisasiQuery->count();
 
         // Tahun untuk filter
         $years = Pengeluaran::selectRaw('YEAR(tanggal_keluar) as year')
@@ -27,13 +58,15 @@ class DashboardController extends Controller
 
         $selectedYear = $request->get('year', now()->year);
 
-        // --- Data Penerimaan & Pengeluaran per bulan ---
+        // --- Data Pengeluaran & Penerimaan per bulan ---
         $pengeluaranPerBulan = Pengeluaran::selectRaw('MONTH(tanggal_keluar) as month, SUM(saldo_keluar) as total')
+            ->when($kodeUnit !== '3R00', fn($q) => $q->whereHas('material', fn($q2) => $q2->where('plant', $kodeUnit)))
             ->whereYear('tanggal_keluar', $selectedYear)
             ->groupBy('month')
             ->pluck('total', 'month');
 
         $penerimaanPerBulan = Penerimaan::selectRaw('MONTH(tanggal_terima) as month, SUM(saldo_masuk) as total')
+            ->when($kodeUnit !== '3R00', fn($q) => $q->whereHas('material', fn($q2) => $q2->where('plant', $kodeUnit)))
             ->whereYear('tanggal_terima', $selectedYear)
             ->groupBy('month')
             ->pluck('total', 'month');
@@ -47,13 +80,17 @@ class DashboardController extends Controller
         }
 
         // --- Grafik Stok Material ---
-        $stokMaterial = Material::select('uraian_material', 'total_saldo')->get();
+        $stokMaterial = Material::when($kodeUnit !== '3R00', fn($q) => $q->where('plant', $kodeUnit))
+            ->select('uraian_material', 'total_saldo')
+            ->get();
+
         $stokLabels = $stokMaterial->pluck('uraian_material');
         $stokData   = $stokMaterial->pluck('total_saldo');
 
         // --- Grafik Kecepatan Realisasi ---
-        $realisasi = RealisasiPengeluaran::selectRaw('DATE(scan_keluar) as tgl, 
-                    AVG(TIMESTAMPDIFF(MINUTE, scan_keluar, scan_akhir)) as rata_waktu')
+        $realisasi = RealisasiPengeluaran::with('pengeluaran.material')
+            ->when($kodeUnit !== '3R00', fn($q) => $q->whereHas('pengeluaran.material', fn($q2) => $q2->where('plant', $kodeUnit)))
+            ->selectRaw('DATE(scan_keluar) as tgl, AVG(TIMESTAMPDIFF(MINUTE, scan_keluar, scan_akhir)) as rata_waktu')
             ->whereNotNull('scan_keluar')
             ->whereNotNull('scan_akhir')
             ->groupBy('tgl')
@@ -62,6 +99,7 @@ class DashboardController extends Controller
 
         $realisasiLabels = $realisasi->pluck('tgl');
         $realisasiData   = $realisasi->pluck('rata_waktu');
+
         $units = Unit::all();
 
         return view('admin.index', [
@@ -81,6 +119,7 @@ class DashboardController extends Controller
             'units'            => $units,
         ]);
     }
+
 
 
     // API untuk chart AJAX

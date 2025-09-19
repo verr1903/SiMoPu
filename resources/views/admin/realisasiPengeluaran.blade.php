@@ -96,13 +96,16 @@
                                             </a>
                                             @endif
                                         </form>
-
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                         <button type="button"
                                             class="btn btn-success d-flex align-items-center justify-content-center mt-2 mt-md-0 w-md-auto"
                                             style=" height: 45px;"
                                             data-bs-toggle="modal" data-bs-target="#tambah">
                                             <i class="bi bi-plus mb-2 me-1"></i>Tambah
                                         </button>
+                                        @endif
+                                        @endauth
 
                                     </div>
 
@@ -122,8 +125,13 @@
                                                     <th>DETAIL</th>
                                                     <th>SCAN KELUAR</th>
                                                     <th>SCAN SELESAI</th>
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                                     <th>PRINT</th>
                                                     <th>AKSI</th>
+                                                    @endif
+                                                    @endauth
+
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -168,6 +176,8 @@
                                                             }}
                                                     </td>
                                                     <!-- Print -->
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                                     <td>
                                                         <a href="{{ route('realisasi.print', $realisasi->id) }}" target="_blank" class="btn btn-sm btn-secondary">
                                                             <i class="bi bi-printer"></i> Print
@@ -199,6 +209,8 @@
 
                                                         </div>
                                                     </td>
+                                                    @endif
+                                                    @endauth
                                                 </tr>
                                                 @empty
                                                 <tr>
@@ -252,7 +264,7 @@
                                     <option value="{{ $pengeluaran->id }}"
                                         data-saldo-sisa="{{ $pengeluaran->saldo_sisa }}"
                                         {{ old('pengeluaran_id') == $pengeluaran->id ? 'selected' : '' }}>
-                                        {{ $pengeluaran->material->kode_material }} -
+                                        {{ $pengeluaran->material->uraian_material }} -
                                         Tgl: {{ \Carbon\Carbon::parse($pengeluaran->tanggal_keluar)->translatedFormat('d M Y') }} |
                                         Total Saldo Keluar: {{ $pengeluaran->saldo_keluar }} Kg |
                                         Sisa Saldo Keluar: {{ $pengeluaran->saldo_sisa }} Kg |

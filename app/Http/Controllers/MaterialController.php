@@ -31,15 +31,23 @@ class MaterialController extends Controller
         $query->orderBy($sortBy, $order);
 
         // 📄 Pagination
+        $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session
+
+        if ($kodeUnit !== '3R00') {
+            $query->where('plant', $kodeUnit);
+        }
+
         $materials = $query->paginate(10)->withQueryString();
 
         $units = Unit::all();
 
-        $kodeUnitSession = session('kodeunit'); // pastikan session('kodeunit') sudah di-set saat login
-        $unitAdministrasi = Material::where('plant', $kodeUnitSession)
-            ->orderBy('kode_material', 'asc')
-            ->paginate(10)
-            ->withQueryString();
+        $unitAdministrasiQuery = Material::orderBy('kode_material', 'asc');
+
+        if ($kodeUnit !== '3R00') {
+            $unitAdministrasiQuery->where('plant', $kodeUnit);
+        }
+
+        $unitAdministrasi = $unitAdministrasiQuery->paginate(10)->withQueryString();
 
         return view('admin.material', [
             'title' => 'Material',

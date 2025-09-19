@@ -18,40 +18,32 @@ class PengeluaranController extends Controller
 {
     public function index(Request $request)
     {
-        // Query dasar
+        $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session
+
+        // Query dasar Pengeluaran
         $query = Pengeluaran::with(['material', 'user']);
 
         // 🔍 Search
         if ($request->has('search') && $request->search != '') {
-            $query->whereHas('material', function ($q) use ($request) {
-                $q->where('kode_material', 'like', '%' . $request->search . '%');
-            })
-                ->orWhere('tanggal_keluar', 'like', '%' . $request->search . '%')
-                ->orWhere('saldo_keluar', 'like', '%' . $request->search . '%')
-                ->orWhere('sumber', 'like', '%' . $request->search . '%');
-        }
-        $user = Auth::user();
-
-        $blok = [
-            'AFD01' => ['9G', '11G', '13G', '15G', '17G', '19G', '21G', '9H', '11H', '13H', '15H', '17H', '19H', '21H', '9I', '11I', '13I', '15I', '17I', '19I', '21I', '9J', '11J', '13J', '15J', '17J', '19J', '21J'],
-            'AFD02' => ['9L', '11L', '13L', '15L', '9M', '10O', '12O', '14O', '16O', '18O', '20O', '22O', '24O', '6P', '8P', '10P', '12P', '14P', '16P', '18P', '20P', '22P', '24P', '26P', '28P'],
-            'AFD03' => ['14L', '14M', '16M', '18M', '20M', '22M', '12N', '12N1', '14N', '16N', '18N', '20N', '22N', '24N', '26N', '28N', '30N', '24O1', '26O', '28O', '30O', '36O', '26P1', '28P1', '30P', '36P', '38P', '40P'],
-            'AFD04' => ['14I', '14I1', '16I', '16I1', '18I', '18J', '20J', '22J', '24J', '12K', '14K', '16K', '18K', '20K', '22K', '24K', '26K', '16L', '18L', '20L', '22L', '24L', '26L', '28L', '16M1', '18M1', '20M1', '22M1', '24M', '26M', '28M', '30M', '26N1', '28N1', '30N1', '1BT'],
-        ];
-
-        $blokUser = [];
-
-        if (Str::contains($user->level_user, 'afdeling')) {
-            // Ambil bagian '04' lalu tambahkan prefix 'AFD'
-            preg_match('/\d+$/', $user->level_user, $matches); // ambil angka di akhir
-            $afd = 'AFD' . ($matches[0] ?? '');
-            $blokUser = $blok[$afd] ?? [];
-        } else {
-            $blokUser = array_merge(...array_values($blok));
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('material', function ($q2) use ($request) {
+                    $q2->where('uraian_material', 'like', '%' . $request->search . '%');
+                })
+                    ->orWhere('tanggal_keluar', 'like', '%' . $request->search . '%')
+                    ->orWhere('saldo_keluar', 'like', '%' . $request->search . '%')
+                    ->orWhere('sumber', 'like', '%' . $request->search . '%')
+                    ->orWhere('au58', 'like', '%' . $request->search . '%');
+            });
         }
 
+        // 🔄 Filter material berdasarkan kodeunit, kecuali 3R00
+        if ($kodeUnit !== '3R00') {
+            $query->whereHas('material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
 
-        // 🔄 Urutkan: status "menunggu" paling atas, lalu by created_at desc
+        // 🔄 Sorting status
         $query->orderByRaw("
             CASE 
                 WHEN status = 'menunggu' THEN 0
@@ -69,20 +61,50 @@ class PengeluaranController extends Controller
             END
         ");
 
-
-        // 🔄 Panggil scope yang kita buat
+        // 🔄 Pagination tabel 1
         $Pengeluarans = $query->urutkanStatus()
             ->paginate(10, ['*'], 'tabel1')
             ->withQueryString();
 
-        // 📄 Pagination tabel 2 (hanya diterima)
-        $PengeluaransDiterima = Pengeluaran::with(['material', 'user'])
-            ->where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
+        // 🔄 Pagination tabel 2 (hanya diterima)
+        $queryDiterima = Pengeluaran::with(['material', 'user'])
+            ->where('user_id', Auth::id());
+
+        // Filter material untuk tabel2 juga
+        if ($kodeUnit !== '3R00') {
+            $queryDiterima->whereHas('material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
+
+        $PengeluaransDiterima = $queryDiterima->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'tabel2')
             ->withQueryString();
 
-        $materials = Material::orderBy('created_at', 'desc')->get();
+        // 🔄 Materials untuk dropdown
+        $materialsQuery = Material::orderBy('created_at', 'desc');
+        if ($kodeUnit !== '3R00') {
+            $materialsQuery->where('plant', $kodeUnit);
+        }
+        $materials = $materialsQuery->get();
+
+        // 🔄 Blok user
+        $user = Auth::user();
+        $blok = [
+            'AFD01' => ['9G', '11G', '13G', '15G', '17G', '19G', '21G', '9H', '11H', '13H', '15H', '17H', '19H', '21H', '9I', '11I', '13I', '15I', '17I', '19I', '21I', '9J', '11J', '13J', '15J', '17J', '19J', '21J'],
+            'AFD02' => ['9L', '11L', '13L', '15L', '9M', '10O', '12O', '14O', '16O', '18O', '20O', '22O', '24O', '6P', '8P', '10P', '12P', '14P', '16P', '18P', '20P', '22P', '24P', '26P', '28P'],
+            'AFD03' => ['14L', '14M', '16M', '18M', '20M', '22M', '12N', '12N1', '14N', '16N', '18N', '20N', '22N', '24N', '26N', '28N', '30N', '24O1', '26O', '28O', '30O', '36O', '26P1', '28P1', '30P', '36P', '38P', '40P'],
+            'AFD04' => ['14I', '14I1', '16I', '16I1', '18I', '18J', '20J', '22J', '24J', '12K', '14K', '16K', '18K', '20K', '22K', '24K', '26K', '16L', '18L', '20L', '22L', '24L', '26L', '28L', '16M1', '18M1', '20M1', '22M1', '24M', '26M', '28M', '30M', '26N1', '28N1', '30N1', '1BT'],
+        ];
+
+        $blokUser = [];
+        if (Str::contains($user->level_user, 'afdeling')) {
+            preg_match('/\d+$/', $user->level_user, $matches);
+            $afd = 'AFD' . ($matches[0] ?? '');
+            $blokUser = $blok[$afd] ?? [];
+        } else {
+            $blokUser = array_merge(...array_values($blok));
+        }
 
         return view('admin.pengeluaran', [
             'title'                => 'Pengeluaran',
@@ -212,35 +234,53 @@ class PengeluaranController extends Controller
     // realisasi pengeluaran
     public function indexRealisasi(Request $request)
     {
+        $kodeUnit = session('kodeunit'); // Ambil kodeunit dari session
+
         // Query dasar
         $query = RealisasiPengeluaran::with(['pengeluaran.material', 'pengeluaran.user']);
 
-        // ✅ Search
+        // 🔍 Search
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($query) use ($search) {
+            $query->where(function ($query) use ($search, $kodeUnit) {
+
                 // Cari di material
-                $query->whereHas('pengeluaran.material', function ($q) use ($search) {
-                    $q->where('kode_material', 'like', "%{$search}%");
+                $query->whereHas('pengeluaran.material', function ($q) use ($search, $kodeUnit) {
+                    if ($kodeUnit !== '3R00') {
+                        $q->where('plant', $kodeUnit);
+                    }
+                    $q->where(function ($q2) use ($search) {
+                        $q2->where('kode_material', 'like', "%{$search}%")
+                            ->orWhere('uraian_material', 'like', "%{$search}%");
+                    });
                 })
+
                     // Cari di user
                     ->orWhereHas('pengeluaran.user', function ($q) use ($search) {
                         $q->where('username', 'like', "%{$search}%")
                             ->orWhere('level_user', 'like', "%{$search}%");
                     })
+
                     // Cari di pengeluaran
                     ->orWhereHas('pengeluaran', function ($q) use ($search) {
-                        $q->whereJsonContains('sumber', $search) // ✅ array-safe
+                        $q->whereJsonContains('sumber', $search)
                             ->orWhereDate('tanggal_keluar', 'like', "%{$search}%");
                     })
+
                     // Cari di tabel realisasi_pengeluaran sendiri
                     ->orWhere('cicilan_pengeluaran', 'like', "%{$search}%")
                     ->orWhereDate('created_at', 'like', "%{$search}%");
             });
+        } else {
+            // 🔄 Filter material berdasarkan kodeunit, kecuali 3R00
+            if ($kodeUnit !== '3R00') {
+                $query->whereHas('pengeluaran.material', function ($q) use ($kodeUnit) {
+                    $q->where('plant', $kodeUnit);
+                });
+            }
         }
 
-
-        // ✅ Sorting
+        // 🔄 Sorting
         $sort  = $request->get('sort', 'created_at');
         $order = $request->get('order', 'desc');
 
@@ -259,15 +299,22 @@ class PengeluaranController extends Controller
             $query->orderBy('cicilan_pengeluaran', $order);
         }
 
-
-        // ✅ Ambil data
+        // 🔄 Ambil data
         $realisasiPengeluarans = $query->paginate(10)->appends($request->all());
 
-        // Pilihan pengeluaran (untuk tambah realisasi)
-        $pengeluarans = Pengeluaran::with(['material', 'user'])
+        // 🔄 Pilihan pengeluaran (untuk tambah realisasi)
+        $pengeluaransQuery = Pengeluaran::with(['material', 'user'])
             ->where('status', 'diterima')
-            ->where('saldo_sisa', '>', 0)
-            ->get();
+            ->where('saldo_sisa', '>', 0);
+
+        // Filter material sesuai kodeunit, kecuali 3R00
+        if ($kodeUnit !== '3R00') {
+            $pengeluaransQuery->whereHas('material', function ($q) use ($kodeUnit) {
+                $q->where('plant', $kodeUnit);
+            });
+        }
+
+        $pengeluarans = $pengeluaransQuery->get();
 
         return view('admin.realisasiPengeluaran', [
             'title'                 => 'Realisasi Pengeluaran',
@@ -275,6 +322,7 @@ class PengeluaranController extends Controller
             'pengeluarans'          => $pengeluarans,
         ]);
     }
+
 
     public function storeRealisasi(Request $request)
     {
@@ -357,16 +405,21 @@ class PengeluaranController extends Controller
         if (is_null($realisasi->scan_keluar)) {
             $realisasi->update(['scan_keluar' => now()]);
             $status = 'success';
-            $message = 'Scan keluar berhasil dicatat pada ' . now()->translatedFormat('d F Y H:i:s');
+            $message = 'Scan keluar berhasil dicatat pada ' . Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i:s');
         } elseif (is_null($realisasi->scan_akhir)) {
             $scanKeluar = \Carbon\Carbon::parse($realisasi->scan_keluar);
+            $waktuSekarang = Carbon::now('Asia/Jakarta');
 
-            if ($scanKeluar->diffInMinutes(now()) >= 1) {
+            $jamMinimal = Carbon::now('Asia/Jakarta')->setHour(9)->setMinute(34)->setSecond(0);
+
+            if ($waktuSekarang->greaterThanOrEqualTo($jamMinimal)) {
+            // if ($scanKeluar->diffInMinutes(now()) >= 1) {
                 $realisasi->update(['scan_akhir' => now()]);
                 $status = 'success';
-                $message = 'Scan akhir berhasil dicatat pada ' . now()->translatedFormat('d F Y H:i:s');
+                $message = 'Scan akhir berhasil dicatat pada ' . Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i:s');
             } else {
-                $message = 'Scan akhir hanya bisa dilakukan minimal 1 menit setelah scan keluar';
+                $message = 'Scan akhir hanya bisa dilakukan diatas jam 2 siang';
+                // $message = 'Scan akhir hanya bisa dilakukan minimal 1 menit setelah scan keluar';
             }
         } else {
             $message = 'QR ini sudah discan 2 kali (scan keluar & scan akhir sudah tercatat)';

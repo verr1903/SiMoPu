@@ -237,7 +237,7 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="6">Tidak ada data material</td>
+                                                    <td colspan="7">Tidak ada data material</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
@@ -251,7 +251,7 @@
                                         @endauth
 
                                         @auth
-                                        @if(Str::contains(Auth::user()->level_user, 'afdeling'))
+                                        @if(Str::contains(Auth::user()->level_user, ['afdeling', 'manager', 'ktu']))
                                         <table class="table table-hover mb-0 text-center">
                                             <thead>
                                                 <tr>
@@ -275,7 +275,7 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="4">Tidak ada data material</td>
+                                                    <td colspan="6">Tidak ada data material</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>
