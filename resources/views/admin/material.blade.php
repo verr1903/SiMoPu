@@ -356,7 +356,7 @@
                         <div class="mb-3">
                             <label for="total_saldo" class="form-label">Saldo Awal /Kg</label>
                             <input type="number" class="form-control @error('total_saldo') is-invalid @enderror"
-                                name="total_saldo" id="total_saldo" value="{{ old('total_saldo') }}" placeholder="Contoh: DOLOMITE" required>
+                                name="total_saldo" id="total_saldo" value="{{ old('total_saldo') }}" placeholder="Contoh: 100" required>
                             @error('total_saldo')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

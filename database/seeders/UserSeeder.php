@@ -79,7 +79,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'username'   => 'Kasiadi',
-                'sap'        => '5005075',
+                'sap'        => '5005076',
                 'password'   => Hash::make('12345678'),
                 'level_user' => 'afdeling 04',
                 'kodeunit'   => '3E02',

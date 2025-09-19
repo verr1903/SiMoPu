@@ -181,7 +181,7 @@
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td colspan="6">Tidak ada data pengeluaran</td>
+                                                    <td colspan="7">Tidak ada data pengeluaran</td>
                                                 </tr>
                                                 @endforelse
                                             </tbody>

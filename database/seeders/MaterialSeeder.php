@@ -36,7 +36,7 @@ class MaterialSeeder extends Seeder
                 'kode_material'   => '40005947',
                 'uraian_material' => 'KCL (MOP)',
                 'satuan'          => 'Kg',
-                'total_saldo'     => 200,
+                'total_saldo'     => 2070,
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ],
