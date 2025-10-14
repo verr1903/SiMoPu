@@ -91,6 +91,37 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="card shadow">
+                               <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h4>DOWNLOAD LAPORAN PERBULAN</h4>
+                                    <div class="d-flex">
+                                        <select id="monthSelect" class="form-select me-2" style="width:auto;">
+                                            <option value="">-- Bulan --</option>
+                                            @for ($m = 1; $m <= 12; $m++)
+                                                <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                                            @endfor
+                                        </select>
+
+                                        <select id="yearSelect" class="form-select me-2" style="width:auto;">
+                                            @foreach($years as $year)
+                                                <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                            @endforeach
+                                        </select>
+
+                                        <button id="downloadExcelBtn" class="btn btn-success">
+                                            <i class="bi bi-file-earmark-excel"></i> Download Excel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card-body">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card shadow">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h4>DIAGRAM PENERIMAAN DAN PENGELUARAN </h4>
                                     <select id="yearSelectArea" class="form-select" style="width:auto;">
@@ -227,4 +258,42 @@
     };
     var stokChart = new ApexCharts(document.querySelector("#stokMaterialChart"), stokOptions);
     stokChart.render();
+</script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.getElementById("downloadExcelBtn").addEventListener("click", function () {
+    const month = document.getElementById("monthSelect").value;
+    const year = document.getElementById("yearSelect").value;
+
+    // Validasi: wajib isi bulan & tahun
+    if (!month || !year) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Oops...',
+            text: 'Silakan pilih bulan dan tahun terlebih dahulu sebelum mendownload Excel.',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK',
+        });
+        return;
+    }
+
+    // Jika sudah lengkap → konfirmasi download
+    Swal.fire({
+        icon: 'question',
+        title: 'Download Laporan?',
+        html: `Anda akan mendownload laporan untuk <b>${month}/${year}</b>`,
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Download!',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const url = `/dashboard/export-excel?year=${year}&month=${month}`;
+            window.location.href = url;
+        }
+    });
+});
 </script>

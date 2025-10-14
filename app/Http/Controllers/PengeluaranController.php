@@ -426,7 +426,7 @@ class PengeluaranController extends Controller
             $scanKeluar = \Carbon\Carbon::parse($realisasi->scan_keluar);
             $waktuSekarang = Carbon::now('Asia/Jakarta');
 
-            $jamMinimal = Carbon::now('Asia/Jakarta')->setHour(14)->setMinute(00)->setSecond(0);
+            $jamMinimal = Carbon::now('Asia/Jakarta')->setHour(7)->setMinute(00)->setSecond(0);
 
             if ($waktuSekarang->greaterThanOrEqualTo($jamMinimal)) {
                 // if ($scanKeluar->diffInMinutes(now()) >= 1) {

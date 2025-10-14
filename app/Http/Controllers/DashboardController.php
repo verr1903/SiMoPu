@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StokMaterialExport;
 use Illuminate\Http\Request;
 use App\Models\Material;
 use App\Models\Penerimaan;
@@ -148,4 +150,12 @@ class DashboardController extends Controller
             'penerimaan'  => $penerimaanData,
         ]);
     }
+
+   public function exportExcel(Request $request)
+{
+    $year = $request->input('year');
+    $month = $request->input('month');
+
+    return Excel::download(new StokMaterialExport($year, $month), 'Laporan_Stok_Material.xlsx');
+}
 }

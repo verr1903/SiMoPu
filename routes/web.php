@@ -8,6 +8,8 @@ use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KelolaUserController;
 use App\Http\Controllers\ProfileController;
+use App\Exports\StokMaterialExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Database\Factories\PengeluaranFactory;
 
 Route::get('/', [AuthController::class, 'index'])->name('login')->middleware('isGuest');
@@ -23,7 +25,11 @@ Route::get('/realisasi/scan/{id}', [PengeluaranController::class, 'scanUpdate'])
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/chart-data/{year}', [DashboardController::class, 'getChartData']);
+    Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])->name('dashboard.export.excel');
 
+    Route::get('/test-export', function () {
+        return Excel::download(new StokMaterialExport(2025, 9), 'stok_material.xlsx');
+    });
 
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
