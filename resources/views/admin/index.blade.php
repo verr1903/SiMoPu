@@ -87,11 +87,12 @@
                         </div>
                     </div>
 
-
+                    @auth
+                    @if(Str::contains(Auth::user()->level_user, ['administrator', 'administrasi', 'manager', 'atu']))
                     <div class="row">
                         <div class="col-12">
                             <div class="card shadow">
-                               <div class="card-header d-flex justify-content-between align-items-center">
+                                <div class="card-header d-flex justify-content-between align-items-center">
                                     <h4>DOWNLOAD LAPORAN PERBULAN</h4>
                                     <div class="d-flex">
                                         <select id="monthSelect" class="form-select me-2" style="width:auto;">
@@ -114,11 +115,12 @@
                                 </div>
 
                                 <div class="card-body">
-                                    
                                 </div>
                             </div>
                         </div>
                     </div>
+                    @endif
+                    @endauth
                     <div class="row">
                         <div class="col-12">
                             <div class="card shadow">
@@ -239,7 +241,7 @@
     var stokOptions = {
         series: [{
             data: {!! json_encode($stokData) !!},
-            
+
         }],
         chart: {
             type: 'bar',
@@ -252,7 +254,6 @@
         },
         xaxis: {
             categories: {!! json_encode($stokLabels) !!},
-
         },
         colors: ["#827fe2ff"]
     };
@@ -262,38 +263,39 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<!-- download excel -->
 <script>
-document.getElementById("downloadExcelBtn").addEventListener("click", function () {
-    const month = document.getElementById("monthSelect").value;
-    const year = document.getElementById("yearSelect").value;
+    document.getElementById("downloadExcelBtn").addEventListener("click", function() {
+        const month = document.getElementById("monthSelect").value;
+        const year = document.getElementById("yearSelect").value;
 
-    // Validasi: wajib isi bulan & tahun
-    if (!month || !year) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Oops...',
-            text: 'Silakan pilih bulan dan tahun terlebih dahulu sebelum mendownload Excel.',
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'OK',
-        });
-        return;
-    }
-
-    // Jika sudah lengkap → konfirmasi download
-    Swal.fire({
-        icon: 'question',
-        title: 'Download Laporan?',
-        html: `Anda akan mendownload laporan untuk <b>${month}/${year}</b>`,
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Download!',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const url = `/dashboard/export-excel?year=${year}&month=${month}`;
-            window.location.href = url;
+        // Validasi: wajib isi bulan & tahun
+        if (!month || !year) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Oops...',
+                text: 'Silakan pilih bulan dan tahun terlebih dahulu sebelum mendownload Excel.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK',
+            });
+            return;
         }
+
+        // Jika sudah lengkap → konfirmasi download
+        Swal.fire({
+            icon: 'question',
+            title: 'Download Laporan?',
+            html: `Anda akan mendownload laporan untuk <b>${month}/${year}</b>`,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Download!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = `/dashboard/export-excel?year=${year}&month=${month}`;
+                window.location.href = url;
+            }
+        });
     });
-});
 </script>

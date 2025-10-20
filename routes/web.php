@@ -31,6 +31,8 @@ Route::middleware(['auth'])->group(function () {
         return Excel::download(new StokMaterialExport(2025, 9), 'stok_material.xlsx');
     });
 
+    Route::post('/realisasi/print-multiple', [PengeluaranController::class, 'printMultiple'])
+    ->name('realisasi.printMultiple');
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
     Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');

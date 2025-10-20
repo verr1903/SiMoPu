@@ -111,12 +111,43 @@
 
 
 
+
                                     <!-- table hover -->
                                     <div class="table-responsive p-5">
+                                        @auth
+                                        @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                        <!-- 📄 Tombol kontrol tabel -->
+                                        <div class="d-flex justify-content-end align-items-center mb-3">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <small class="text-muted">Centang data yang ingin dicetak</small>
+
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="selectAll">
+                                                    <label class="form-check-label fw-bold" for="selectAll">
+                                                        Pilih Semua
+                                                    </label>
+                                                </div>
+
+                                                <form id="printForm" method="POST" action="{{ route('realisasi.printMultiple') }}">
+                                                    @csrf
+                                                    <input type="hidden" name="selected_ids" id="selected_ids">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="bi bi-file-earmark-word"></i> Cetak Word
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        @endauth
 
                                         <table class="table table-hover mb-4 text-center">
                                             <thead>
                                                 <tr>
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                                    <th style="width: 30px;"></th>
+                                                    @endif
+                                                    @endauth
                                                     <th>NAMA PUPUK</th>
                                                     <th>TANGGAL KELUAR</th>
                                                     <th>AFDELING</th>
@@ -127,6 +158,7 @@
                                                     <th>SCAN SELESAI</th>
                                                     @auth
                                                     @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+
                                                     <th>PRINT</th>
                                                     <th>AKSI</th>
                                                     @endif
@@ -137,6 +169,13 @@
                                             <tbody>
                                                 @forelse($realisasiPengeluarans as $realisasi)
                                                 <tr>
+                                                    @auth
+                                                    @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
+                                                    <td>
+                                                        <input type="checkbox" class="row-checkbox form-check-input" value="{{ $realisasi->id }}">
+                                                    </td>
+                                                    @endif
+                                                    @endauth
                                                     <td>{{ $realisasi->pengeluaran->material->uraian_material }}</td>
                                                     <td>{{ \Carbon\Carbon::parse($realisasi->created_at)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $realisasi->pengeluaran->user->level_user}}</td>
@@ -299,6 +338,9 @@
                                 </button>
                                 <button type="submit" class="btn btn-success">
                                     <i class="bi bi-check"></i> Simpan
+                                </button>
+                                <button type="button" id="btnCetakSemua" class="btn btn-warning text-white">
+                                    <i class="bi bi-printer"></i> Cetak Semua
                                 </button>
                             </div>
                         </form>
@@ -489,4 +531,86 @@
                 }
             });
         }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            const printForm = document.getElementById('printForm');
+            const hiddenInput = document.getElementById('selected_ids');
+            const STORAGE_KEY = 'selected_realisasi_ids'; // kunci penyimpanan di sessionStorage
+
+            // Ambil data tersimpan dari sessionStorage (bukan localStorage)
+            let selectedIds = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || [];
+
+            // Tandai checkbox yang sudah pernah dipilih sebelumnya
+            checkboxes.forEach(cb => {
+                if (selectedIds.includes(cb.value)) {
+                    cb.checked = true;
+                }
+            });
+
+            // Handler: centang semua
+            selectAll.addEventListener('click', function() {
+                const checked = this.checked;
+                checkboxes.forEach(cb => {
+                    cb.checked = checked;
+                    if (checked) {
+                        if (!selectedIds.includes(cb.value)) selectedIds.push(cb.value);
+                    } else {
+                        selectedIds = selectedIds.filter(id => id !== cb.value);
+                    }
+                });
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedIds));
+            });
+
+            // Handler: checkbox individual
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        if (!selectedIds.includes(this.value)) selectedIds.push(this.value);
+                    } else {
+                        selectedIds = selectedIds.filter(id => id !== this.value);
+                    }
+                    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedIds));
+                });
+            });
+
+            // Handler: submit form
+            printForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (selectedIds.length === 0) {
+                    Swal.fire('Pilih data dulu!', '', 'warning');
+                    return;
+                }
+
+                hiddenInput.value = selectedIds.join(',');
+                sessionStorage.removeItem(STORAGE_KEY); // hapus setelah dicetak
+                this.submit();
+            });
+
+            // Optional: kalau user refresh manual, hapus semua pilihan
+            window.addEventListener('beforeunload', function() {
+                if (performance.navigation.type === 1) { // 1 artinya "refresh"
+                    sessionStorage.removeItem(STORAGE_KEY);
+                }
+            });
+        });
+    </script>
+
+
+
+    <!-- script tambahkan semua data realisasi -->
+    <script>
+        document.getElementById('btnCetakSemua').addEventListener('click', function() {
+            const form = document.querySelector('form[action="{{ route('realisasiPengeluaran.store') }}"]');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'cetak_semua';
+            input.value = '1';
+            form.appendChild(input);
+            form.submit();
+        });
     </script>

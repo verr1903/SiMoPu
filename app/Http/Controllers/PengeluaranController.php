@@ -11,7 +11,10 @@ use App\Models\RealisasiPengeluaran;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpWord\Shared\Converter;
 use Carbon\Carbon;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
 use Illuminate\Support\Str;
 
 class PengeluaranController extends Controller
@@ -140,7 +143,7 @@ class PengeluaranController extends Controller
             'saldo_keluar'   => 'required|integer|min:1',
             'au58'           => 'required|string|max:255',
             'sumber'   => ['required', 'array', 'min:1'],
-            'sumber.*' => ['string', 'regex:/^[0-9]+[A-Z]$/'],
+            'sumber.*' => ['string'],
             'status'         => 'nullable|string|max:50',
         ]);
 
@@ -339,35 +342,58 @@ class PengeluaranController extends Controller
         ]);
     }
 
-
     public function storeRealisasi(Request $request)
     {
-        // Validasi input
         $request->validate([
             'pengeluaran_id'      => 'required|exists:pengeluarans,id',
-            'cicilan_pengeluaran' => 'required|integer|min:1',
+            'cicilan_pengeluaran' => $request->has('cetak_semua')
+                ? 'nullable'
+                : 'required|integer|min:1',
         ]);
 
-        // Ambil pengeluaran terkait
         $pengeluaran = Pengeluaran::findOrFail($request->pengeluaran_id);
 
-        // Cek jika cicilan melebihi saldo_sisa
-        if ($request->cicilan_pengeluaran > $pengeluaran->saldo_sisa) {
-            return back()->with('error', 'Cicilan melebihi saldo sisa!');
+        // Mode biasa
+        if (!$request->has('cetak_semua')) {
+            if ($request->cicilan_pengeluaran > $pengeluaran->saldo_sisa) {
+                return back()->with('error', 'Cicilan melebihi saldo sisa!');
+            }
+
+            RealisasiPengeluaran::create([
+                'pengeluaran_id'      => $request->pengeluaran_id,
+                'cicilan_pengeluaran' => $request->cicilan_pengeluaran,
+            ]);
+
+            $pengeluaran->decrement('saldo_sisa', $request->cicilan_pengeluaran);
+
+            return redirect()->route('realisasiPengeluaran')
+                ->with('success', 'Realisasi pengeluaran berhasil ditambahkan!');
         }
 
-        // Simpan ke tabel realisasi_pengeluarans
-        RealisasiPengeluaran::create([
-            'pengeluaran_id'      => $request->pengeluaran_id,
-            'cicilan_pengeluaran' => $request->cicilan_pengeluaran,
-        ]);
+        // Mode cetak semua (otomatis pecah 50kg per realisasi)
+        $sisa = $pengeluaran->saldo_sisa;
+        $batch = 50; // satuan per realisasi
 
-        // Kurangi saldo_sisa pada tabel pengeluarans
-        $pengeluaran->decrement('saldo_sisa', $request->cicilan_pengeluaran);
+        if ($sisa < $batch) {
+            return back()->with('error', 'Saldo sisa kurang dari 50kg, tidak bisa dicetak semua.');
+        }
+
+        $jumlahRealisasi = floor($sisa / $batch);
+        $totalDigunakan = $jumlahRealisasi * $batch;
+
+        for ($i = 0; $i < $jumlahRealisasi; $i++) {
+            RealisasiPengeluaran::create([
+                'pengeluaran_id'      => $request->pengeluaran_id,
+                'cicilan_pengeluaran' => $batch,
+            ]);
+        }
+
+        $pengeluaran->decrement('saldo_sisa', $totalDigunakan);
 
         return redirect()->route('realisasiPengeluaran')
-            ->with('success', 'Realisasi pengeluaran berhasil ditambahkan!');
+            ->with('success', "Berhasil membuat {$jumlahRealisasi} realisasi (masing-masing 50kg) untuk pengeluaran ini!");
     }
+
 
     public function printRealisasi($id)
     {
@@ -410,6 +436,134 @@ class PengeluaranController extends Controller
             'fileName'  => $fileName,
         ]);
     }
+
+    public function printMultiple(Request $request)
+    {
+        $ids = $request->input('selected_ids', '');
+
+        if (empty($ids)) {
+            return back()->with('error', 'Pilih minimal satu data untuk dicetak.');
+        }
+
+        // pastikan array
+        $ids = explode(',', $ids);
+
+        $realisasis = RealisasiPengeluaran::with(['pengeluaran.material', 'pengeluaran.user'])
+            ->whereIn('id', $ids)
+            ->get();
+
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
+
+        $section = $phpWord->addSection([
+            'pageSizeW' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(21.0),
+            'pageSizeH' => \PhpOffice\PhpWord\Shared\Converter::cmToTwip(29.7),
+            'marginLeft' => 500,
+            'marginRight' => 500,
+            'marginTop' => 200,
+            'marginBottom' => 200,
+        ]);
+
+        // pengaturan tabel
+        $table = $section->addTable([
+            'alignment' => \PhpOffice\PhpWord\SimpleType\JcTable::CENTER,
+            'borderSize' => 0,
+            'cellMargin' => 100,
+        ]);
+
+        $colCount = 0;
+        $rowCount = 0;
+        $itemsPerPage = 6; // 3 baris × 2 kolom
+        $itemCount = 0;
+
+        foreach ($realisasis as $realisasi) {
+            // mulai baris baru setiap 2 kolom
+            if ($colCount === 0) {
+                $table->addRow();
+                $rowCount++;
+            }
+
+            // tambahkan cell
+            $cell = $table->addCell(\PhpOffice\PhpWord\Shared\Converter::cmToTwip(10.5), ['valign' => 'center']);
+
+            $tanggalKeluar = \Carbon\Carbon::parse($realisasi->pengeluaran->tanggal_keluar)
+                ->translatedFormat('d M Y');
+
+            $qrPath = storage_path('app/public/qrcodes/temp_' . $realisasi->id . '.png');
+            \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+                ->size(300)
+                ->errorCorrection('H')
+                ->merge(storage_path('app/public/logo/logoqr.png'), 0.4, true)
+                ->generate(route('realisasi.scan', ['id' => $realisasi->id]), $qrPath);
+
+            $blok = is_array($realisasi->pengeluaran->sumber)
+                ? implode(', ', $realisasi->pengeluaran->sumber)
+                : $realisasi->pengeluaran->sumber;
+
+            $cell->addText(
+                'NAMA PUPUK: ' . strtoupper($realisasi->pengeluaran->material->uraian_material),
+                ['bold' => true, 'size' => 13],
+                ['alignment' => 'center']
+            );
+            $cell->addText(
+                'AFDELING: ' . strtoupper($realisasi->pengeluaran->user->level_user),
+                ['bold' => true, 'size' => 11],
+                ['alignment' => 'center']
+            );
+            $cell->addText(
+                'BLOK: ' . strtoupper($blok),
+                ['size' => 10],
+                ['alignment' => 'center']
+            );
+            $cell->addText(
+                'BERAT: ' . strtoupper($realisasi->cicilan_pengeluaran) . 'KG',
+                ['size' => 10],
+                ['alignment' => 'center']
+            );
+
+            if (file_exists($qrPath)) {
+                $cell->addImage($qrPath, [
+                    'width' => 150,
+                    'height' => 150,
+                    'alignment' => 'center',
+                ]);
+            }
+
+            $colCount++;
+            $itemCount++;
+
+            // jika sudah 2 kolom, reset kolom untuk baris baru
+            if ($colCount === 2) {
+                $colCount = 0;
+            }
+
+            // jika sudah 6 item (3 baris × 2 kolom), buat halaman baru
+            if ($itemCount % $itemsPerPage === 0 && $itemCount < count($realisasis)) {
+                $section->addPageBreak();
+
+                // buat tabel baru untuk halaman berikutnya
+                $table = $section->addTable([
+                    'alignment' => \PhpOffice\PhpWord\SimpleType\JcTable::CENTER,
+                    'borderSize' => 0,
+                    'cellMargin' => 100,
+                ]);
+
+                // reset counter baris & kolom
+                $rowCount = 0;
+                $colCount = 0;
+            }
+        }
+
+        // simpan file
+        $fileName = 'Realisasi_Batch_' . now()->format('Ymd_His') . '.docx';
+        $filePath = storage_path('app/public/' . $fileName);
+
+        $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($filePath);
+
+        return response()->download($filePath)->deleteFileAfterSend(true);
+    }
+
+
 
     public function scanUpdate($id)
     {
