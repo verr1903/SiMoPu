@@ -99,7 +99,7 @@ class UserSeeder extends Seeder
                 'username'   => 'Hariswan',
                 'sap'        => '5006550',
                 'password'   => Hash::make('12345678'),
-                'level_user' => 'atu',
+                'level_user' => 'administrator',
                 'kodeunit'   => '3E02',
                 'created_at' => now(),
                 'updated_at' => now(),
