@@ -178,6 +178,55 @@ class PengeluaranController extends Controller
             ->with('success', 'Pengeluaran berhasil ditambahkan, menunggu persetujuan Admin!');
     }
 
+    public function update(Request $request, $id)
+    {
+        $pengeluaran = Pengeluaran::findOrFail($id);
+
+        $request->validate([
+            'material_id'    => 'required|exists:materials,id',
+            'tanggal_keluar' => 'required|date',
+            'saldo_keluar'   => 'required|integer|min:1',
+            'au58'           => 'required|string|max:255',
+            'sumber'         => ['required', 'array'],
+        ]);
+
+        $material = Material::findOrFail($request->material_id);
+
+        // 🔄 Kembalikan saldo lama dulu
+        $material->increment('total_saldo', $pengeluaran->saldo_keluar);
+
+        // 🔄 Kurangi saldo baru
+        $material->decrement('total_saldo', $request->saldo_keluar);
+
+        // Update pengeluaran
+        $pengeluaran->update([
+            'material_id'    => $request->material_id,
+            'tanggal_keluar' => $request->tanggal_keluar,
+            'saldo_keluar'   => $request->saldo_keluar,
+            'au58'           => $request->au58,
+            'sumber'         => $request->sumber,
+        ]);
+
+        return redirect()->route('pengeluaran')
+            ->with('success', 'Pengeluaran berhasil diperbarui!');
+    }
+
+
+    public function destroy($id)
+    {
+        $pengeluaran = Pengeluaran::findOrFail($id);
+
+        // Kembalikan stok material
+        $pengeluaran->material->increment('total_saldo', $pengeluaran->saldo_keluar);
+
+        // Hapus data
+        $pengeluaran->delete();
+
+        return redirect()->route('pengeluaran')
+            ->with('success', 'Pengeluaran berhasil dihapus!');
+    }
+
+
     public function updateStatus(Request $request, $id)
     {
         $pengeluaran = Pengeluaran::findOrFail($id);

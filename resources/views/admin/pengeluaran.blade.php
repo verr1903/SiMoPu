@@ -116,7 +116,7 @@
                                     <!-- table hover -->
                                     <div class="table-responsive p-5">
 
-                                        {{-- 🔹 Tabel dengan STATUS & AKSI --}}
+                                        {{-- 🔹 Tabel administrasi --}}
                                         @auth
                                         @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator', 'manager', 'atu']))
                                         <table class="table table-hover mb-4 text-center">
@@ -193,7 +193,7 @@
                                         @endif
                                         @endauth
 
-                                        {{-- 🔹 Tabel tanpa STATUS AKSI --}}
+                                        {{-- 🔹 Tabel AFDELING --}}
                                         @auth
                                         @if(Str::contains(Auth::user()->level_user, 'afdeling'))
                                         <table class="table table-hover mb-4 text-center">
@@ -205,6 +205,7 @@
                                                     <th>SALDO KELUAR</th>
                                                     <th>BLOK</th>
                                                     <th>STATUS</th>
+                                                    <th>AKSI</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -212,7 +213,7 @@
                                                 <tr>
                                                     <td>{{ $item->au58 }}</td>
                                                     <td>{{ $item->material->uraian_material }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($item->tanggal_terima)->translatedFormat('d M Y') }}</td>
+                                                    <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
                                                     <td>{{ $item->saldo_keluar }} {{ $item->material->satuan }}</td>
                                                     <td>{{ implode(', ', (array) $item->sumber) }}</td>
                                                     <td>
@@ -230,6 +231,47 @@
                                                         </span>
                                                         @endif
                                                     </td>
+                                                    @if ($item->status !== 'menunggu')
+                                                    <td></td>
+                                                    @endif
+                                                    @if ($item->status === 'menunggu')
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <!-- Tombol Edit -->
+                                                            <!-- Tombol Edit item -->
+                                                            <button
+                                                                type="button"
+                                                                title="Edit"
+                                                                style="border-radius: 50%;"
+                                                                class="btn btn-warning btn-sm btn-edit me-1 text-white"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#editModal"
+                                                                data-id="{{ $item->id }}"
+                                                                data-material="{{ $item->material_id }}"
+                                                                data-tanggal="{{ $item->tanggal_keluar }}"
+                                                                data-saldo="{{ $item->saldo_keluar }}"
+                                                                data-au58="{{ $item->au58 }}"
+                                                                data-sumber="{{ json_encode($item->sumber) }}">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+
+
+                                                            <!-- Tombol Hapus -->
+                                                            <form id="delete-form-{{ $item->id }}" action="{{ route('pengeluaran.destroy', $item->id) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                                                    title="Hapus"
+                                                                    data-id="{{ $item->id }}"
+                                                                    onclick="confirmDelete(this)">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                            <!-- </form> -->
+
+                                                        </div>
+                                                    </td>
+                                                    @endif
                                                 </tr>
                                                 @empty
                                                 <tr>
@@ -356,6 +398,76 @@
     <!-- End Modal Tambah Pengeluaran -->
 
 
+    <!-- Modal Edit Pengeluaran -->
+    <div class="modal fade text-left" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+
+                <!-- Header -->
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title text-white" id="editLabel">Edit Pengeluaran</h5>
+                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+                    <form id="editForm" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mb-3">
+                            <label for="edit_material_id" class="form-label">Pilih Material</label>
+                            <select class="form-select" name="material_id" id="edit_material_id" required>
+                                <option value="">-- Pilih Material --</option>
+                                @foreach($materials as $material)
+                                <option value="{{ $material->id }}">
+                                    {{ $material->kode_material }} - {{ $material->uraian_material }}
+                                    (Saldo: {{ $material->total_saldo }} {{ $material->satuan }})
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Pengeluaran</label>
+                            <input type="date" class="form-control" name="tanggal_keluar" id="edit_tanggal" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Saldo Keluar /Kg</label>
+                            <input type="number" min="1" class="form-control" name="saldo_keluar" id="edit_saldo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Au 58</label>
+                            <input type="text" class="form-control" name="au58" id="edit_au58" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Kode Blok</label>
+                            <div id="edit-sumber-container"></div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-sm" id="add-edit-sumber">+ Tambah Kode Blok</button>
+
+                        <!-- Footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                                <i class="bi bi-x"></i> Keluar
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check"></i> Simpan
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- End edit modal pengeluaran -->
+
 </x-layout>
 
 <!-- script modal tambah -->
@@ -392,4 +504,91 @@
             }
         });
     });
+</script>
+
+<!-- modal edit -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // klik tombol edit
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+
+                // set action form
+                let id = this.dataset.id;
+                document.getElementById('editForm').action = "/pengeluaran/" + id;
+
+                // isi field
+                document.getElementById('edit_material_id').value = this.dataset.material;
+                document.getElementById('edit_tanggal').value = this.dataset.tanggal;
+                document.getElementById('edit_saldo').value = this.dataset.saldo;
+                document.getElementById('edit_au58').value = this.dataset.au58;
+
+                // blok
+                let sumberArray = JSON.parse(this.dataset.sumber);
+                let container = document.getElementById('edit-sumber-container');
+                container.innerHTML = "";
+
+                sumberArray.forEach(sumber => {
+                    let html = `
+                    <div class="input-group mb-2 sumber-edit-input">
+                        <select name="sumber[]" class="form-select">
+                            @foreach($blokUser as $blok)
+                                <option value="{{ $blok }}">{{ $blok }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="btn btn-danger remove-edit-sumber">Hapus</button>
+                    </div>
+                `;
+                    container.insertAdjacentHTML("beforeend", html);
+                    container.lastElementChild.querySelector("select").value = sumber;
+                });
+            });
+        });
+
+        // tambah blok di modal edit
+        document.getElementById('add-edit-sumber').addEventListener('click', function() {
+            let container = document.getElementById('edit-sumber-container');
+            let html = `
+            <div class="input-group mb-2 sumber-edit-input">
+                <select name="sumber[]" class="form-select">
+                    @foreach($blokUser as $blok)
+                        <option value="{{ $blok }}">{{ $blok }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-danger remove-edit-sumber">Hapus</button>
+            </div>
+        `;
+            container.insertAdjacentHTML("beforeend", html);
+        });
+
+        // hapus blok
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-edit-sumber')) {
+                e.target.closest('.sumber-edit-input').remove();
+            }
+        });
+
+    });
+</script>
+
+<!-- script hapus -->
+<script>
+    function confirmDelete(button) {
+        const id = button.dataset.id;
+        Swal.fire({
+            title: 'Apakah kamu yakin?',
+            text: "Data ini akan dihapus permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
 </script>

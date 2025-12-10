@@ -15,75 +15,83 @@
                 <div class="col-12 col-lg-12">
                     <div class="row">
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card shadow">
-                                <div class="card-body px-4 py-4-5">
-                                    <div class="row">
-                                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                                            <div class="stats-icon purple mb-2">
-                                                <i class="bi bi-box-seam mb-4 me-2"></i>
+                            <a href="{{ route('materials') }}" style="text-decoration: none; color: inherit;">
+                                <div class="card shadow">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
+                                                <div class="stats-icon purple mb-2">
+                                                    <i class="bi bi-box-seam mb-4 me-2"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                                            <h6 class="text-muted font-semibold">Total Material</h6>
-                                            <h6 class="font-extrabold mb-0">{{ $totalMaterial }}</h6>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Total Material</h6>
+                                                <h6 class="font-extrabold mb-0">{{ $totalMaterial }}</h6>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card shadow">
-                                <div class="card-body px-4 py-4-5">
-                                    <div class="row">
-                                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                                            <div class="stats-icon blue mb-2">
-                                                <i class="bi bi-arrow-down-circle mb-4 me-2"></i>
+                            <a href="{{ route('penerimaan') }}" style="text-decoration: none; color: inherit;">
+                                <div class="card shadow">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
+                                                <div class="stats-icon blue mb-2">
+                                                    <i class="bi bi-arrow-down-circle mb-4 me-2"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                                            <h6 class="text-muted font-semibold">Penerimaan</h6>
-                                            <h6 class="font-extrabold mb-0">{{ $totalPenerimaan }}</h6>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Penerimaan</h6>
+                                                <h6 class="font-extrabold mb-0">{{ $totalPenerimaan }}</h6>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card shadow">
-                                <div class="card-body px-4 py-4-5">
-                                    <div class="row">
-                                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                                            <div class="stats-icon green mb-2">
-                                                <i class="bi bi-arrow-up-circle mb-4 me-2"></i>
+                            <a href="{{ route('pengeluaran') }}" style="text-decoration: none; color: inherit;">
+                                <div class="card shadow">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
+                                                <div class="stats-icon green mb-2">
+                                                    <i class="bi bi-arrow-up-circle mb-4 me-2"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                                            <h6 class="text-muted font-semibold">Pengeluaran</h6>
-                                            <h6 class="font-extrabold mb-0">{{ $totalPengeluaran }}</h6>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Pengeluaran</h6>
+                                                <h6 class="font-extrabold mb-0">{{ $totalPengeluaran }}</h6>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
 
                         <div class="col-6 col-lg-3 col-md-6">
-                            <div class="card shadow">
-                                <div class="card-body px-4 py-4-5">
-                                    <div class="row">
-                                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                                            <div class="stats-icon red mb-2">
-                                                <i class="bi bi-qr-code-scan mb-4 me-2"></i>
+                            <a href="{{ route('realisasiPengeluaran') }}" style="text-decoration: none; color: inherit;">
+                                <div class="card shadow">
+                                    <div class="card-body px-4 py-4-5">
+                                        <div class="row">
+                                            <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
+                                                <div class="stats-icon red mb-2">
+                                                    <i class="bi bi-qr-code-scan mb-4 me-2"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
-                                            <h6 class="text-muted font-semibold">Total QR Code</h6>
-                                            <h6 class="font-extrabold mb-0">{{ $totalRealisasi }}</h6>
+                                            <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
+                                                <h6 class="text-muted font-semibold">Total QR Code</h6>
+                                                <h6 class="font-extrabold mb-0">{{ $totalRealisasi }}</h6>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                     </div>
 
@@ -99,12 +107,12 @@
                                             <option value="">-- Bulan --</option>
                                             @for ($m = 1; $m <= 12; $m++)
                                                 <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-                                            @endfor
+                                                @endfor
                                         </select>
 
                                         <select id="yearSelect" class="form-select me-2" style="width:auto;">
                                             @foreach($years as $year)
-                                                <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                            <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
                                             @endforeach
                                         </select>
 
@@ -165,11 +173,15 @@
     var areaOptions = {
         series: [{
                 name: "Pengeluaran",
-                data: {!! json_encode($pengeluaranData) !!},
+                data: {
+                    !!json_encode($pengeluaranData) !!
+                },
             },
             {
                 name: "Penerimaan",
-                data: {!! json_encode($penerimaanData) !!},
+                data: {
+                    !!json_encode($penerimaanData) !!
+                },
             }
         ],
         chart: {
@@ -240,7 +252,9 @@
     // === Grafik Stok Material ===
     var stokOptions = {
         series: [{
-            data: {!! json_encode($stokData) !!},
+            data: {
+                !!json_encode($stokData) !!
+            },
 
         }],
         chart: {
@@ -253,7 +267,9 @@
             }
         },
         xaxis: {
-            categories: {!! json_encode($stokLabels) !!},
+            categories: {
+                !!json_encode($stokLabels) !!
+            },
         },
         colors: ["#827fe2ff"]
     };

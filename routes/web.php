@@ -32,7 +32,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::post('/realisasi/print-multiple', [PengeluaranController::class, 'printMultiple'])
-    ->name('realisasi.printMultiple');
+        ->name('realisasi.printMultiple');
     Route::get('/realisasi-pengeluaran', [PengeluaranController::class, 'indexRealisasi'])->name('realisasiPengeluaran');
     Route::post('/realisasi-pengeluaran/store', [PengeluaranController::class, 'storeRealisasi'])->name('realisasiPengeluaran.store');
     Route::get('/realisasi/print/{id}', [PengeluaranController::class, 'printRealisasi'])->name('realisasi.print');
@@ -54,6 +54,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
     Route::post('pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
+    Route::put('pengeluaran/{id}', [PengeluaranController::class, 'update'])->name('pengeluaran.update');
+    Route::delete('/pengeluaran/{id}', [PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy');
     Route::patch('/pengeluaran/{id}/status', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus');
 
     Route::get('/penerimaan', [PenerimaanController::class, 'index'])->name('penerimaan');
@@ -71,4 +73,8 @@ Route::middleware(['auth'])->group(function () {
 
 Route::fallback(function () {
     return response()->view('error', [], 404);
+});
+
+Route::get('/phpinfo', function () {
+    phpinfo();
 });
