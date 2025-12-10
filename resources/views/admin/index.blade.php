@@ -107,12 +107,12 @@
                                             <option value="">-- Bulan --</option>
                                             @for ($m = 1; $m <= 12; $m++)
                                                 <option value="{{ $m }}">{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-                                                @endfor
+                                            @endfor
                                         </select>
 
                                         <select id="yearSelect" class="form-select me-2" style="width:auto;">
                                             @foreach($years as $year)
-                                            <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                                <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>{{ $year }}</option>
                                             @endforeach
                                         </select>
 
@@ -173,15 +173,11 @@
     var areaOptions = {
         series: [{
                 name: "Pengeluaran",
-                data: {
-                    !!json_encode($pengeluaranData) !!
-                },
+                data: {!! json_encode($pengeluaranData) !!},
             },
             {
                 name: "Penerimaan",
-                data: {
-                    !!json_encode($penerimaanData) !!
-                },
+                data: {!! json_encode($penerimaanData) !!},
             }
         ],
         chart: {
@@ -252,9 +248,7 @@
     // === Grafik Stok Material ===
     var stokOptions = {
         series: [{
-            data: {
-                !!json_encode($stokData) !!
-            },
+            data: {!! json_encode($stokData) !!},
 
         }],
         chart: {
@@ -267,9 +261,7 @@
             }
         },
         xaxis: {
-            categories: {
-                !!json_encode($stokLabels) !!
-            },
+            categories: {!! json_encode($stokLabels) !!},
         },
         colors: ["#827fe2ff"]
     };

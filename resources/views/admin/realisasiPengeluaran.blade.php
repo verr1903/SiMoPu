@@ -117,26 +117,42 @@
                                         @auth
                                         @if(in_array(Auth::user()->level_user, ['administrasi', 'administrator']))
                                         <!-- 📄 Tombol kontrol tabel -->
-                                        <div class="d-flex justify-content-end align-items-center mb-3">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <small class="text-muted">Centang data yang ingin dicetak</small>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
 
-                                                <div class="form-check mb-0">
-                                                    <input class="form-check-input" type="checkbox" id="selectAll">
-                                                    <label class="form-check-label fw-bold" for="selectAll">
-                                                        Pilih Semua
-                                                    </label>
-                                                </div>
-
-                                                <form id="printForm" method="POST" action="{{ route('realisasi.printMultiple') }}">
-                                                    @csrf
-                                                    <input type="hidden" name="selected_ids" id="selected_ids">
-                                                    <button type="submit" class="btn btn-primary">
-                                                        <i class="bi bi-file-earmark-word"></i> Cetak Word
-                                                    </button>
-                                                </form>
-                                            </div>
+                                        <!-- ◀️ BAGIAN KIRI (Dropdown jumlah data) -->
+                                        <div class="d-flex align-items-center gap-2">
+                                            <label for="perPage" class="me-2 text-muted">Tampilkan</label>
+                                            <select id="perPage" class="form-select form-select-sm" style="width: 80px;">
+                                                <option value="10" {{ request('perPage') == 10 ? 'selected' : '' }}>10</option>
+                                                <option value="25" {{ request('perPage') == 25 ? 'selected' : '' }}>25</option>
+                                                <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50</option>
+                                                <option value="100" {{ request('perPage') == 100 ? 'selected' : '' }}>100</option>
+                                            </select>
+                                            <span class="text-muted ms-1">data</span>
                                         </div>
+
+                                        <!-- ▶️ BAGIAN KANAN (Select All + Cetak Word) -->
+                                        <div class="d-flex align-items-center gap-3">
+                                            <small class="text-muted">Centang data yang ingin dicetak</small>
+
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                                <label class="form-check-label fw-bold" for="selectAll">
+                                                    Pilih Semua
+                                                </label>
+                                            </div>
+
+                                            <form id="printForm" method="POST" action="{{ route('realisasi.printMultiple') }}">
+                                                @csrf
+                                                <input type="hidden" name="selected_ids" id="selected_ids">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-file-earmark-word"></i> Cetak Word
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                    </div>
+
                                         @endif
                                         @endauth
 
@@ -614,3 +630,15 @@
             form.submit();
         });
     </script>
+
+   <!-- script pagination dinamis-->
+   <script>
+document.getElementById('perPage').addEventListener('change', function () {
+    const url = new URL(window.location.href);
+
+    url.searchParams.set('perPage', this.value);
+    url.searchParams.set('page', 1); // reset ke halaman 1
+
+    window.location.href = url.toString();
+});
+</script>

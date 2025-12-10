@@ -367,8 +367,11 @@ class PengeluaranController extends Controller
             $query->orderBy('cicilan_pengeluaran', $order);
         }
 
-        // 🔄 Ambil data
-        $realisasiPengeluarans = $query->paginate(10)->appends($request->all());
+        // 🔢 Ambil jumlah data per halaman dari request, default 10
+        $perPage = $request->get('perPage', 10);
+
+        // 🔄 Ambil data dengan pagination dinamis
+        $realisasiPengeluarans = $query->paginate($perPage)->appends($request->all());
 
         // 🔄 Pilihan pengeluaran (untuk tambah realisasi)
         $pengeluaransQuery = Pengeluaran::with(['material', 'user'])
