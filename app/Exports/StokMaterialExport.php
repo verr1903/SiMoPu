@@ -2,15 +2,23 @@
 
 namespace App\Exports;
 
-use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromView;
 use App\Models\Material;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\{
+    FromCollection,
+    WithHeadings,
+    WithMapping,
+    WithEvents
+};
+use Maatwebsite\Excel\Events\AfterSheet;
 
-class StokMaterialExport implements FromView
+class StokMaterialExport implements
+    FromCollection,
+    WithHeadings,
+    WithMapping,
+    WithEvents
 {
-    protected $year;
-    protected $month;
+    protected $year, $month;
 
     public function __construct($year, $month = null)
     {
@@ -18,95 +26,161 @@ class StokMaterialExport implements FromView
         $this->month = $month;
     }
 
-    /**
-     * Hitung saldo awal pada bulan tertentu.
-     */
-    protected function getSaldoAwal($item, $year, $month)
+    /* ================= DATA ================= */
+    public function collection()
     {
-        $cutoff = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        return Material::with(['penerimaans', 'pengeluarans'])->get();
+    }
 
-        // saldo akhir (total_saldo) saat ini
-        $saldoAkhirSekarang = $item->total_saldo;
+    /* ================= MAP ================= */
+    public function map($item): array
+    {
+        $saldoAwal = $this->getSaldoAwal($item);
+        $masuk = $this->getMasuk($item);
+        $keluar = $this->getKeluar($item);
 
-        // hitung semua transaksi setelah bulan yang diminta
-        $totalMasukSetelah = $item->penerimaans()
+        return [
+            $item->plant,
+            $item->kode_material,
+            $item->uraian_material,
+            $item->satuan,
+            $saldoAwal,
+            $masuk,
+            $keluar,
+            $saldoAwal + $masuk - $keluar,
+        ];
+    }
+
+    /* ================= HEADER ================= */
+    public function headings(): array
+    {
+        return [
+            'Valuation Area',
+            'Material',
+            'Material Description',
+            'Base Unit',
+            'Saldo Awal',
+            'Masuk',
+            'Keluar',
+            'Saldo Akhir',
+        ];
+    }
+
+    /* ================= STYLE ================= */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $lastColumn = $sheet->getHighestColumn();
+
+                /* ===== INSERT TITLE ROW ===== */
+                $sheet->insertNewRowBefore(1, 1);
+
+                /* ===== TITLE TEXT ===== */
+                $bulan = strtoupper(Carbon::createFromDate($this->year, (int) $this->month, 1)->translatedFormat('F'));
+                $judul = "LAPORAN STOK MATERIAL BULAN $bulan TAHUN {$this->year}";
+
+                $sheet->setCellValue('A1', $judul);
+                $sheet->mergeCells("A1:$lastColumn" . "1");
+
+                /* ===== TITLE STYLE ===== */
+                $sheet->getStyle("A1:$lastColumn" . "1")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                    ],
+                    'alignment' => [
+                        'horizontal' => 'center',
+                        'vertical' => 'center',
+                    ],
+                ]);
+
+                $sheet = $event->sheet->getDelegate();
+                $lastRow = $sheet->getHighestRow();
+                $lastCol = $sheet->getHighestColumn();
+
+                /* HEADER */
+                $sheet->getStyle("A1:$lastCol" . "1")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => 'FFFFFF'],
+                    ],
+                    'fill' => [
+                        'fillType' => 'solid',
+                        'startColor' => ['rgb' => '1F4E78'],
+                    ],
+                    'alignment' => [
+                        'horizontal' => 'center',
+                        'vertical' => 'center',
+                    ],
+                ]);
+
+                /* ZEBRA */
+                for ($row = 2; $row <= $lastRow; $row++) {
+                    if ($row % 2 === 0) {
+                        $sheet->getStyle("A$row:$lastCol$row")->applyFromArray([
+                            'fill' => [
+                                'fillType' => 'solid',
+                                'startColor' => ['rgb' => 'F5F7FA'],
+                            ],
+                        ]);
+                    }
+                }
+
+                /* BORDER */
+                $sheet->getStyle("A1:$lastCol$lastRow")->applyFromArray([
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => 'thin',
+                            'color' => ['rgb' => 'D0D0D0'],
+                        ],
+                    ],
+                ]);
+
+                /* FORMAT ANGKA */
+                $sheet->getStyle("E2:H$lastRow")
+                    ->getNumberFormat()
+                    ->setFormatCode('#,##0');
+
+                /* AUTO WIDTH */
+                foreach (range('A', $lastCol) as $col) {
+                    $sheet->getColumnDimension($col)->setAutoSize(true);
+                }
+            }
+        ];
+    }
+
+    /* ================= HELPER ================= */
+    protected function getSaldoAwal($item)
+    {
+        $cutoff = Carbon::createFromDate($this->year, $this->month, 1)->startOfMonth();
+
+        $masukSetelah = $item->penerimaans()
             ->where('tanggal_terima', '>=', $cutoff)
             ->sum('saldo_masuk');
 
-        $totalKeluarSetelah = $item->pengeluarans()
+        $keluarSetelah = $item->pengeluarans()
             ->where('tanggal_keluar', '>=', $cutoff)
             ->sum('saldo_keluar');
 
-        // rumus mundur saldo awal
-        return $saldoAkhirSekarang + $totalKeluarSetelah - $totalMasukSetelah;
+        return $item->total_saldo + $keluarSetelah - $masukSetelah;
     }
 
-    /**
-     * Hitung saldo akhir pada bulan tertentu.
-     */
-    protected function getSaldoAkhir($item, $year, $month)
+    protected function getMasuk($item)
     {
-        // ambil saldo awal bulan tersebut
-        $saldoAwal = $this->getSaldoAwal($item, $year, $month);
-
-        // total transaksi bulan tersebut
-        $masuk = $item->penerimaans()
-            ->whereYear('tanggal_terima', $year)
-            ->whereMonth('tanggal_terima', $month)
+        return $item->penerimaans()
+            ->whereYear('tanggal_terima', $this->year)
+            ->whereMonth('tanggal_terima', $this->month)
             ->sum('saldo_masuk');
-
-        $keluar = $item->pengeluarans()
-            ->whereYear('tanggal_keluar', $year)
-            ->whereMonth('tanggal_keluar', $month)
-            ->sum('saldo_keluar');
-
-        // saldo akhir bulan itu
-        return $saldoAwal + $masuk - $keluar;
     }
 
-    /**
-     * View export ke Excel.
-     */
-    public function view(): View
+    protected function getKeluar($item)
     {
-        $year = $this->year;
-        $month = $this->month;
-
-        $materials = Material::with(['penerimaans', 'pengeluarans'])->get()->map(function ($item) use ($year, $month) {
-
-            // saldo awal
-            $saldo_awal = $this->getSaldoAwal($item, $year, $month);
-
-            // transaksi bulan dipilih
-            $masuk = $item->penerimaans()
-                ->whereYear('tanggal_terima', $year)
-                ->whereMonth('tanggal_terima', $month)
-                ->sum('saldo_masuk');
-
-            $keluar = $item->pengeluarans()
-                ->whereYear('tanggal_keluar', $year)
-                ->whereMonth('tanggal_keluar', $month)
-                ->sum('saldo_keluar');
-
-            // saldo akhir bulan dipilih (pakai helper juga boleh)
-            $saldo_akhir = $this->getSaldoAkhir($item, $year, $month);
-
-            return [
-                'plant' => $item->plant,
-                'kode_material' => $item->kode_material,
-                'satuan' => $item->satuan,
-                'nama' => $item->uraian_material,
-                'saldo_awal' => $saldo_awal,
-                'masuk' => $masuk,
-                'keluar' => $keluar,
-                'saldo_akhir' => $saldo_akhir,
-            ];
-        });
-
-        return view('exports.stok_material', [
-            'materials' => $materials,
-            'year' => $year,
-            'month' => $month,
-        ]);
+        return $item->pengeluarans()
+            ->where('status', 'diterima')
+            ->whereYear('tanggal_keluar', $this->year)
+            ->whereMonth('tanggal_keluar', $this->month)
+            ->sum('saldo_keluar');
     }
 }
